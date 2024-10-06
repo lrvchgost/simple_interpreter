@@ -1,8 +1,26 @@
 const INTEGER = "INTEGER";
 const PLUS = "PLUS";
 const MINUS = "MINUS";
+const MUL = "MUL";
+const DIV = "DIV";
 const EOF = "EOF";
 const SPACE = "SPACE";
+
+const sum = (a, b) => {
+  return a + b;
+};
+
+const sub = (a, b) => {
+  return a - b;
+};
+
+const mul = (a, b) => {
+  return a * b;
+};
+
+const div = (a, b) => {
+  return a / b;
+};
 
 class Token {
   constructor(type, value) {
@@ -21,47 +39,83 @@ class Interpreter {
     this.text = text;
     this.pos = 0;
     this.currentToken = null;
+    this.currentChar = text[this.pos];
+    this.sequence = text.split(/\d/).filter((v) => v.trim()).length;
   }
 
   error(source) {
     throw new Error("Error parsing input:" + source);
   }
 
+  advance() {
+    this.pos += 1;
+
+    if (this.pos > this.text.length - 1) {
+      this.currentChar = null;
+    } else {
+      this.currentChar = this.text[this.pos];
+    }
+  }
+
+  skipWhiteSpaces() {
+    while (!this.isEOF() && this.isSpace(this.currentChar)) {
+      this.advance();
+    }
+  }
+
+  integer() {
+    let result = "";
+
+    while (!this.isEOF() && this.isInteger(this.currentChar)) {
+      result += this.currentChar;
+      this.advance();
+    }
+
+    return Number(result);
+  }
+
+  isEOF() {
+    return this.currentChar === null;
+  }
+
+  // Tokenizer
   getNextToken() {
-    // Tokenizer
-    const text = this.text;
+    while (!this.isEOF()) {
+      let currentChar = this.currentChar;
 
-    if (this.pos > text.length - 1) {
-      return new Token(EOF, null);
+      if (this.isSpace(currentChar)) {
+        this.skipWhiteSpaces();
+        continue;
+      }
+
+      if (this.isInteger(currentChar)) {
+        return new Token(INTEGER, this.integer());
+      }
+
+      if (currentChar === "+") {
+        this.advance();
+        return new Token(PLUS, currentChar);
+      }
+
+      if (currentChar === "-") {
+        this.advance();
+        return new Token(MINUS, currentChar);
+      }
+
+      if (currentChar === "*") {
+        this.advance();
+        return new Token(MUL, currentChar);
+      }
+
+      if (currentChar === "/") {
+        this.advance();
+        return new Token(DIV, currentChar);
+      }
+
+      this.error("getNextToken");
     }
 
-    const currentChar = text[this.pos];
-
-    if (this.isInteger(currentChar)) {
-      const token = new Token(INTEGER, Number(currentChar));
-      this.pos++;
-      return token;
-    }
-
-    if (currentChar === "+") {
-      const token = new Token(PLUS, currentChar);
-      this.pos++;
-      return token;
-    }
-
-    if (currentChar === "-") {
-      const token = new Token(MINUS, currentChar);
-      this.pos++;
-      return token;
-    }
-
-    if (currentChar === " ") {
-      const token = new Token(SPACE, currentChar);
-      this.pos++;
-      return token;
-    }
-
-    this.error("getNextToken");
+    return new Token(EOF, null);
   }
 
   eat(tokenType) {
@@ -80,60 +134,47 @@ class Interpreter {
     return char === " ";
   }
 
-  getWholeInteger() {
-    let integer = '';
-
-    while (this.isInteger(this.currentToken.value)) {
-      integer += this.currentToken.value.toString();
-
-      this.eat(INTEGER);
-    }
-
-    return new Token(INTEGER, Number(integer));
-  }
-
-  walkSpaces() {
-    while (this.isSpace(this.currentToken.value)) {
-      this.eat(SPACE);
-    }
-  }
-
   expr() {
     this.currentToken = this.getNextToken();
 
-    const left = this.getWholeInteger();
+    let result = this.currentToken.value;
 
-    this.walkSpaces();
+    this.eat(INTEGER);
 
-    const op = this.currentToken;
+    return Array.from({ length: this.sequence }).reduce((acc) => {
+      const op = this.currentToken;
 
-    if (op.value === "+") {
-      this.eat(PLUS);
-    }
+      this.eat(op.type);
 
-    if (op.value === "-") {
-      this.eat(MINUS);
-    }
+      const operand = this.currentToken.value;
 
-    this.walkSpaces();
+      this.eat(INTEGER);
 
-    const right = this.getWholeInteger();
+      if (op.type === PLUS) {
+        return sum(acc, operand);
+      }
 
-    if (op.value === "+") {
-      return left.value + right.value;
-    }
+      if (op.type === MINUS) {
+        return sub(acc, operand);
+      }
 
-    if (op.value === "-") {
-      return left.value - right.value;
-    }
+      if (op.type === MUL) {
+        return mul(acc, operand);
+      }
 
-    this.error("expr");
+      if (op.type === DIV) {
+        return div(acc, operand);
+      }
+
+      return acc;
+    }, result);
   }
 }
 
 const expression = process.argv.slice(2)[0];
 
 console.log("expression", expression);
+debugger;
 
 const interpreter = new Interpreter(expression);
 // console.log(interpreter.getNextToken())
