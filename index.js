@@ -134,6 +134,14 @@ class Interpreter {
     return char === " ";
   }
 
+  term() {
+    const value = this.currentToken.value;
+
+    this.eat(INTEGER);
+
+    return value;
+  }
+
   expr() {
     this.currentToken = this.getNextToken();
 
@@ -146,24 +154,22 @@ class Interpreter {
 
       this.eat(op.type);
 
-      const operand = this.currentToken.value;
-
-      this.eat(INTEGER);
+      const value = this.term();
 
       if (op.type === PLUS) {
-        return sum(acc, operand);
+        return sum(acc, value);
       }
 
       if (op.type === MINUS) {
-        return sub(acc, operand);
+        return sub(acc, value);
       }
 
       if (op.type === MUL) {
-        return mul(acc, operand);
+        return mul(acc, value);
       }
 
       if (op.type === DIV) {
-        return div(acc, operand);
+        return div(acc, value);
       }
 
       return acc;
