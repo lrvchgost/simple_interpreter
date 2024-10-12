@@ -34,17 +34,23 @@ class Token {
   }
 }
 
-class Interpreter {
+class Lexer {
   constructor(text) {
     this.text = text;
     this.pos = 0;
-    this.currentToken = null;
     this.currentChar = text[this.pos];
-    this.sequence = text.split(/\d/).filter((v) => v.trim()).length;
   }
 
   error(source) {
     throw new Error("Error parsing input:" + source);
+  }
+
+  isInteger(char) {
+    return Number.isInteger(parseInt(char));
+  }
+
+  isSpace(char) {
+    return char === " ";
   }
 
   advance() {
@@ -117,24 +123,32 @@ class Interpreter {
 
     return new Token(EOF, null);
   }
+}
+
+class Interpreter {
+  constructor(lexer) {
+    this.lexer = lexer;
+    this.currentToken = this.lexer.getNextToken();
+  }
+
 
   eat(tokenType) {
     if (this.currentToken.type === tokenType) {
-      this.currentToken = this.getNextToken();
+      this.currentToken = this.lexer.getNextToken();
     } else {
       this.error("eat");
     }
   }
 
-  isInteger(char) {
-    return Number.isInteger(parseInt(char));
+  error(source) {
+    throw new Error("Invalid syntax:" + source);
   }
 
-  isSpace(char) {
-    return char === " ";
+  isEOF() {
+    return this.currentToken.type === EOF;
   }
 
-  term() {
+  factor() {
     const value = this.currentToken.value;
 
     this.eat(INTEGER);
@@ -143,37 +157,33 @@ class Interpreter {
   }
 
   expr() {
-    this.currentToken = this.getNextToken();
+    let result = this.factor();
 
-    let result = this.currentToken.value;
-
-    this.eat(INTEGER);
-
-    return Array.from({ length: this.sequence }).reduce((acc) => {
+    while (!this.isEOF()) {
       const op = this.currentToken;
 
       this.eat(op.type);
 
-      const value = this.term();
+      const value = this.factor();
 
       if (op.type === PLUS) {
-        return sum(acc, value);
+        result = sum(result, value);
       }
 
       if (op.type === MINUS) {
-        return sub(acc, value);
+        result = sub(result, value);
       }
 
       if (op.type === MUL) {
-        return mul(acc, value);
+        result = mul(result, value);
       }
 
       if (op.type === DIV) {
-        return div(acc, value);
+        result = div(result, value);
       }
+    }
 
-      return acc;
-    }, result);
+    return result
   }
 }
 
@@ -182,7 +192,8 @@ const expression = process.argv.slice(2)[0];
 console.log("expression", expression);
 debugger;
 
-const interpreter = new Interpreter(expression);
+const lexer = new Lexer(expression);
+const interpreter = new Interpreter(lexer);
 // console.log(interpreter.getNextToken())
 // console.log(interpreter.getNextToken())
 // console.log(interpreter.getNextToken())
