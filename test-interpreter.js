@@ -158,7 +158,7 @@ export class Interpreter {
       const value = this.factor();
 
       if (type === MUL) {
-        result = sum(result, value);
+        result = mul(result, value);
       }
 
       if (type === DIV) {
