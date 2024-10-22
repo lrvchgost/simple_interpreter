@@ -1,4 +1,4 @@
-import { Lexer, Interpreter } from '../test-interpreter.js';
+import { Lexer, Interpreter } from '../interpreter.js';
 
 test('It should eval 1 + 1', () => {
   const lexer = new Lexer('2 * 2 + 1');

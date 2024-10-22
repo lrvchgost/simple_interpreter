@@ -1,4 +1,4 @@
-import { Lexer, INTEGER, PLUS, MUL, DIV, MINUS } from "../test-interpreter.js";
+import { Lexer, INTEGER, PLUS, MUL, DIV, MINUS } from "../interpreter.js";
 
 test("It validate integer", () => {
   expect(new Lexer("1").isInteger()).toBeTruthy();

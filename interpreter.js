@@ -4,6 +4,11 @@ const MINUS = "MINUS";
 const MUL = "MUL";
 const DIV = "DIV";
 const EOF = "EOF";
+const SPACE = "SPACE";
+const LPAREN = "(";
+const RPAREN = ")";
+
+export { INTEGER, MINUS, PLUS, MUL, DIV, EOF, SPACE };
 
 const sum = (a, b) => {
   return a + b;
@@ -44,16 +49,16 @@ export class Lexer {
     throw new Error("Error parsing input:" + source);
   }
 
-  isInteger(char) {
-    return Number.isInteger(parseInt(char));
+  isInteger() {
+    return Number.isInteger(parseInt(this.currentChar));
   }
 
-  isSpace(char) {
-    return char === " ";
+  isSpace() {
+    return this.currentChar === " ";
   }
 
   advance() {
-    this.pos += 1;
+    this.pos++;
 
     if (this.pos > this.text.length - 1) {
       this.currentChar = null;
@@ -86,16 +91,16 @@ export class Lexer {
   // Tokenizer
   getNextToken() {
     while (!this.isEOF()) {
-      let currentChar = this.currentChar;
-
-      if (this.isSpace(currentChar)) {
+      if (this.isSpace()) {
         this.skipWhiteSpaces();
         continue;
       }
 
-      if (this.isInteger(currentChar)) {
+      if (this.isInteger()) {
         return new Token(INTEGER, this.integer());
       }
+
+      let currentChar = this.currentChar;
 
       if (currentChar === "+") {
         this.advance();
@@ -115,6 +120,16 @@ export class Lexer {
       if (currentChar === "/") {
         this.advance();
         return new Token(DIV, currentChar);
+      }
+
+      if (currentChar === "(") {
+        this.advance();
+        return new Token(LPAREN, currentChar);
+      }
+
+      if (currentChar === ")") {
+        this.advance();
+        return new Token(RPAREN, currentChar);
       }
 
       this.error("getNextToken");
@@ -147,9 +162,17 @@ export class Interpreter {
   }
 
   factor() {
-    const value = this.currentToken.value;
+    const token = this.currentToken;
 
-    this.eat(INTEGER);
+    if (token.type === INTEGER) {
+      this.eat(INTEGER);
+      return token.value;
+    } else if (token.type === LPAREN) {
+      this.eat(LPAREN);
+      const result = this.expr();
+      this.eat(RPAREN);
+      return result;
+    }
 
     return value;
   }
