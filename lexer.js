@@ -1,6 +1,6 @@
 import { INTEGER, MINUS, PLUS, MUL, DIV, EOF, LPAREN, RPAREN } from './helpers.js';
 
-class Token {
+export class Token {
   constructor(type, value) {
     this.type = type;
     this.value = value;
