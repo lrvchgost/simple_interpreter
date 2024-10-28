@@ -1,4 +1,5 @@
-import { Lexer, Interpreter } from "./interpreter.js";
+import { Interpreter } from "./interpreter.js";
+import { Lexer } from "./lexer.js";
 
 const expression = process.argv.slice(2)[0];
 
