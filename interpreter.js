@@ -1,9 +1,7 @@
-import { NodeVisitor } from './visitor.js';
-
 export class Interpreter {
-  constructor(parser) {
+  constructor(parser, visitor) {
     this.parser = parser;
-    this.visitor = new NodeVisitor();
+    this.visitor = visitor;
   }
 
   interpret() {
