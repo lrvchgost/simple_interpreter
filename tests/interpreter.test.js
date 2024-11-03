@@ -1,5 +1,5 @@
-import { Interpreter } from '../interpreter.js';
-import { Lexer } from '../lexer.js';
+import { Interpreter } from '../src/interpreter.js';
+import { Lexer } from '../src/lexer.js';
 
 test('It should eval 1 + 1', () => {
   const lexer = new Lexer('2 * 2 + 1');

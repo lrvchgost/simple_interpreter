@@ -1,12 +1,19 @@
-class AST {}
+class AST {
+  constructor(token) {
+    this.token = token;
+  }
+
+  visit() {
+    throw 'not implemented';
+  }
+}
 
 export class BinOpNode extends AST {
-  constructor(left, op, right) {
-    super();
+  constructor(left, token, right) {
+    super(token);
     this.left = left;
     this.right = right;
-    this.op = op;
-    this.token = op;
+    this.op = token;
   }
 
   visit(visitor) {
@@ -16,8 +23,7 @@ export class BinOpNode extends AST {
 
 export class NumNode extends AST {
   constructor(token) {
-    super();
-    this.token = token;
+    super(token);
     this.value = token.value;
   }
 

@@ -16,6 +16,7 @@ class Wrapper {
   getPath() {
     return this.path;
   }
+
   getPathString() {
     return this.path.join('-');
   }

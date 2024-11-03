@@ -19,19 +19,19 @@ export class Lexer {
     this.currentChar = text[this.pos];
   }
 
-  error(source) {
+  _error(source) {
     throw new Error("Error parsing input:" + source);
   }
 
-  isInteger() {
+  _isInteger() {
     return Number.isInteger(parseInt(this.currentChar));
   }
 
-  isSpace() {
+  _isSpace() {
     return this.currentChar === " ";
   }
 
-  advance() {
+  _advance() {
     this.pos++;
 
     if (this.pos > this.text.length - 1) {
@@ -41,72 +41,72 @@ export class Lexer {
     }
   }
 
-  skipWhiteSpaces() {
-    while (!this.isEOF() && this.isSpace(this.currentChar)) {
-      this.advance();
+  _skipWhiteSpaces() {
+    while (!this._isEOF() && this._isSpace(this.currentChar)) {
+      this._advance();
     }
   }
 
-  integer() {
+  _integer() {
     let result = "";
 
-    while (!this.isEOF() && this.isInteger(this.currentChar)) {
+    while (!this._isEOF() && this._isInteger(this.currentChar)) {
       result += this.currentChar;
-      this.advance();
+      this._advance();
     }
 
     return Number(result);
   }
 
-  isEOF() {
+  _isEOF() {
     return this.currentChar === null;
   }
 
   // Tokenizer
   getNextToken() {
-    while (!this.isEOF()) {
-      if (this.isSpace()) {
-        this.skipWhiteSpaces();
+    while (!this._isEOF()) {
+      if (this._isSpace()) {
+        this._skipWhiteSpaces();
         continue;
       }
 
-      if (this.isInteger()) {
-        return new Token(INTEGER, this.integer());
+      if (this._isInteger()) {
+        return new Token(INTEGER, this._integer());
       }
 
       let currentChar = this.currentChar;
 
       if (currentChar === "+") {
-        this.advance();
+        this._advance();
         return new Token(PLUS, currentChar);
       }
 
       if (currentChar === "-") {
-        this.advance();
+        this._advance();
         return new Token(MINUS, currentChar);
       }
 
       if (currentChar === "*") {
-        this.advance();
+        this._advance();
         return new Token(MUL, currentChar);
       }
 
       if (currentChar === "/") {
-        this.advance();
+        this._advance();
         return new Token(DIV, currentChar);
       }
 
       if (currentChar === "(") {
-        this.advance();
+        this._advance();
         return new Token(LPAREN, currentChar);
       }
 
       if (currentChar === ")") {
-        this.advance();
+        this._advance();
         return new Token(RPAREN, currentChar);
       }
 
-      this.error("getNextToken");
+      this._error("getNextToken");
     }
 
     return new Token(EOF, null);
