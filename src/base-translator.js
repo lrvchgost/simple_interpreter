@@ -34,4 +34,14 @@ export class BaseTranslator {
   visitForNum(node) {
     return node.value;
   }
+
+  visitForUnaryOp(node) {
+    if (node.token.type === PLUS) {
+      return +node.node.visit(this);
+    }
+
+    if (node.token.type === MINUS) {
+      return -node.node.visit(this);
+    }
+  }
 }

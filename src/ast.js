@@ -4,7 +4,7 @@ class AST {
   }
 
   visit() {
-    throw 'not implemented';
+    throw "AST: function visit is not implemented";
   }
 }
 
@@ -29,5 +29,16 @@ export class NumNode extends AST {
 
   visit(visitor) {
     return visitor.visitForNum(this);
+  }
+}
+
+export class UnaryOpNode extends AST {
+  constructor(token, node) {
+    super(token);
+    this.node = node;
+  }
+
+  visit(visitor) {
+    return visitor.visitForUnaryOp(this);
   }
 }

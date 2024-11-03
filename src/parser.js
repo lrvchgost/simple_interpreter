@@ -1,5 +1,14 @@
-import { INTEGER, MINUS, PLUS, MUL, DIV, EOF, LPAREN, RPAREN } from './helpers.js';
-import { NumNode, BinOpNode } from "./ast.js";
+import {
+  INTEGER,
+  MINUS,
+  PLUS,
+  MUL,
+  DIV,
+  EOF,
+  LPAREN,
+  RPAREN,
+} from "./helpers.js";
+import { NumNode, BinOpNode, UnaryOpNode } from "./ast.js";
 
 export class Parser {
   constructor(lexer) {
@@ -26,7 +35,15 @@ export class Parser {
   _factor() {
     const token = this._currentToken;
 
-    if (token.type === INTEGER) {
+    if (token.type === PLUS) {
+      this._eat(PLUS);
+      const node = new UnaryOpNode(token, this._factor());
+      return node;
+    } else if (token.type === MINUS) {
+      this._eat(MINUS);
+      const node = new UnaryOpNode(token, this._factor());
+      return node;
+    } else if (token.type === INTEGER) {
       this._eat(INTEGER);
       return new NumNode(token);
     } else if (token.type === LPAREN) {
