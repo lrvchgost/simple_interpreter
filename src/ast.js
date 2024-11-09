@@ -42,3 +42,54 @@ export class UnaryOpNode extends AST {
     return visitor.visitForUnaryOp(this);
   }
 }
+
+export class Compaund extends AST {
+  children = [];
+
+  constructor() {
+    super();
+  }
+
+  push(nodes) {
+    this.children.push(...nodes);[]
+  }
+
+  visit(visitor) {
+   return  visitor.visitCompound(this);
+  }
+}
+
+export class Assign extends AST {
+  constructor(left, token, right) {
+    super();
+    this.left = left;
+    this.token = token;
+    this.right = right;
+  }
+
+  visit(visitor) {
+    return visitor.visitAssign(this);
+  }
+}
+
+export class Var extends AST {
+  constructor(token) {
+    super();
+    this.token = token;
+    this.value = token.value;
+  }
+
+  visit(visitor) {
+    return visitor.visitVar(this);
+  }
+}
+
+export class NoOp extends AST {
+  constructor() {
+    super();
+  }
+
+  visit(visitor) {
+    return visitor.visitNoOp(this);
+  }
+}

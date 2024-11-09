@@ -6,7 +6,6 @@ export class Interpreter {
 
   interpret() {
     const ast = this.parser.parse();
-    console.log(ast)
     return this.visit(ast);
   }
 

@@ -7,8 +7,22 @@ import {
   EOF,
   LPAREN,
   RPAREN,
+  ID,
+  ASSIGN,
+  BEGIN,
+  SEMI,
+  END,
+  DOT,
 } from "./helpers.js";
-import { NumNode, BinOpNode, UnaryOpNode } from "./ast.js";
+import {
+  NumNode,
+  BinOpNode,
+  UnaryOpNode,
+  NoOp,
+  Var,
+  Assign,
+  Compaund,
+} from "./ast.js";
 
 export class Parser {
   constructor(lexer) {
@@ -51,9 +65,9 @@ export class Parser {
       const node = this._expr();
       this._eat(RPAREN);
       return node;
+    } else {
+      return this._variable();
     }
-
-    return value;
   }
 
   _isSumSub() {
@@ -92,7 +106,87 @@ export class Parser {
     return node;
   }
 
+  _programm() {
+    debugger;
+    const node = this._compoundStatement();
+    this._eat(DOT);
+
+    return node;
+  }
+
+  _compoundStatement() {
+    this._eat(BEGIN);
+    const nodes = this._statementsList();
+    this._eat(END);
+
+    const root = new Compaund();
+
+    root.push(nodes);
+
+    return root;
+  }
+
+  _statementsList() {
+    const node = this._statement();
+
+    const results = [node];
+
+    while (this._currentToken.type === SEMI) {
+      this._eat(SEMI);
+      results.push(this._statement());
+    }
+
+    if (this._currentToken.type === ID) {
+      this.error("_statementsList");
+    }
+
+    return results;
+  }
+
+  _statement() {
+    let node;
+
+    if (this._currentToken.type === BEGIN) {
+      node = this._compoundStatement();
+    } else if (this._currentToken.type === ID) {
+      node = this._assignmentStatment();
+    } else {
+      node = this._empty();
+    }
+
+    return node;
+  }
+
+  _assignmentStatment() {
+    const left = this._variable();
+    const token = this._currentToken;
+    this._eat(ASSIGN);
+    const right = this._expr();
+    const node = new Assign(left, token, right);
+    return node;
+  }
+
+  _variable() {
+    const node = new Var(this._currentToken);
+    this._eat(ID);
+    return node;
+  }
+
+  _empty() {
+    return new NoOp();
+  }
+
   parse() {
-    return this._expr();
+    const node = this._programm();
+
+    if (!this._currentToken.type === EOF) {
+      return this.error("[parse]: invalid parse result");
+    }
+
+    return node;
+  }
+
+  error(error) {
+    throw error;
   }
 }

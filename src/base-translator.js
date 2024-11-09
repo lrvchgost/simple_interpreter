@@ -1,6 +1,8 @@
 import { MINUS, PLUS, MUL, DIV } from "./helpers.js";
 
 export class BaseTranslator {
+  GLOBAL_SCOPE = {};
+
   visitForBinOp(node) {
     if (node.op.type === PLUS) {
       const left = node.left.visit(this);
@@ -43,5 +45,33 @@ export class BaseTranslator {
     if (node.token.type === MINUS) {
       return -node.node.visit(this);
     }
+  }
+
+  visitCompound(node) {
+    for (let child of node.children) {
+      child.visit(this);
+    }
+  }
+
+  visitNoOp() {
+    return;
+  }
+
+  visitAssign(node) {
+    const varName = node.left.value;
+    const value = node.right.visit(this);
+
+    this.GLOBAL_SCOPE[varName] = value;
+  }
+
+  visitVar(node) {
+    const varName = node.value;
+    const val = this.GLOBAL_SCOPE[varName];
+
+    if (val === undefined) {
+      throw "[ " + varName + " ]" + " not found in GLOBAL_SCOPE";
+    }
+
+    return val;
   }
 }
