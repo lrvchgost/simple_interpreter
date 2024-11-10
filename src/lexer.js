@@ -13,6 +13,15 @@ import {
   ASSIGN,
   SEMI,
   DOT,
+  VAR,
+  REAL,
+  PROGRAM,
+  INTEGER_DIV,
+  INTEGER_CONST,
+  REAL_CONST,
+  COLON,
+  COMMA,
+  FLOAT_DIV,
 } from "./helpers.js";
 
 export class Token {
@@ -27,6 +36,11 @@ export class Token {
 }
 
 const RESERVED_KEYWORDS = {
+  [PROGRAM]: new Token(PROGRAM, PROGRAM),
+  [VAR]: new Token(VAR, VAR),
+  [DIV]: new Token(INTEGER_DIV, DIV),
+  [INTEGER]: new Token(INTEGER, INTEGER),
+  [REAL]: new Token(REAL, REAL),
   [BEGIN]: new Token(BEGIN, BEGIN),
   [END]: new Token(END, END),
 };
@@ -51,10 +65,6 @@ export class Lexer {
     }
   }
 
-  _isUnderscore() {
-    return this.currentChar === "_";
-  }
-
   _isAlphaChar() {
     const code = this.currentChar.charCodeAt(0);
 
@@ -72,7 +82,7 @@ export class Lexer {
   _id() {
     let result = "";
 
-    while (!this._isEOF() && (this._isAlfaNum() || this._isUnderscore())) {
+    while (!this._isEOF() && this._isAlfaNum()) {
       result += this.currentChar;
       this._advance();
     }
@@ -80,33 +90,20 @@ export class Lexer {
     return RESERVED_KEYWORDS[result.toUpperCase()] ?? new Token(ID, result);
   }
 
-  _isDiv() {
-    const d = this.text[this.pos];
-    if (d !== "d") {
-      return false;
-    }
-    const i = this.text[this.pos + 1];
-    if (i !== "i") {
-      return false;
-    }
-    const v = this.text[this.pos + 2];
-    if (v !== "v") {
-      return false;
-    }
-    const s = this.text[this.pos + 3];
-    if (s !== " ") {
-      return false;
-    }
-
-    return true;
-  }
-
   _isInteger() {
     return Number.isInteger(parseInt(this.currentChar));
   }
 
   _isSpace() {
-    return this.currentChar === " " || this.currentChar === '\n';
+    return this.currentChar === " " || this.currentChar === "\n";
+  }
+
+  _skipComment() {
+    while (!this._isEOF() && this.currentChar !== "}") {
+      this._advance();
+    }
+
+    this._advance();
   }
 
   _advance() {
@@ -120,52 +117,59 @@ export class Lexer {
   }
 
   _skipWhiteSpaces() {
-    while (!this._isEOF() && this._isSpace(this.currentChar)) {
+    while (!this._isEOF() && this._isSpace()) {
       this._advance();
     }
   }
 
-  _integer() {
+  _number() {
     let result = "";
 
-    while (!this._isEOF() && this._isInteger(this.currentChar)) {
+    while (!this._isEOF() && this._isInteger()) {
       result += this.currentChar;
       this._advance();
     }
 
-    return Number(result);
+    if (this.currentChar === ".") {
+      result += this.currentChar;
+
+      this._advance();
+
+      while (!this._isEOF() && this._isInteger(this.currentChar)) {
+        result += this.currentChar;
+        this._advance();
+      }
+
+      return new Token(REAL_CONST, Number(result));
+    } else {
+      return new Token(INTEGER_CONST, Number(result));
+    }
   }
 
   _isEOF() {
     return this.currentChar === null;
   }
 
-  _getDiv() {
-    let result = "";
-    debugger;
-
-    for (let i = 0; i < 3; i++) {
-      result += this.currentChar;
-      this._advance();
-    }
-
-    return result;
-  }
-
   // Tokenizer
   getNextToken() {
     while (!this._isEOF()) {
-      debugger;
       if (this._isSpace()) {
         this._skipWhiteSpaces();
         continue;
       }
 
-      if (this._isInteger()) {
-        return new Token(INTEGER, this._integer());
+      if (this.currentChar === "{") {
+        debugger;
+        this._advance();
+        this._skipComment();
+        continue;
       }
 
-      if ((this._isAlphaChar() || this._isUnderscore()) && !this._isDiv()) {
+      if (this._isInteger()) {
+        return this._number();
+      }
+
+      if (this._isAlphaChar()) {
         return this._id();
       }
 
@@ -175,6 +179,16 @@ export class Lexer {
         this._advance();
         this._advance();
         return new Token(ASSIGN, ":=");
+      }
+
+      if (currentChar === ":") {
+        this._advance();
+        return new Token(COLON, currentChar);
+      }
+
+      if (currentChar === ",") {
+        this._advance();
+        return new Token(COMMA, currentChar);
       }
 
       if (currentChar === ";") {
@@ -202,8 +216,9 @@ export class Lexer {
         return new Token(MUL, currentChar);
       }
 
-      if (this._isDiv()) {
-        return new Token(DIV, this._getDiv());
+      if (currentChar === "/") {
+        this._advance();
+        return new Token(FLOAT_DIV, currentChar);
       }
 
       if (currentChar === "(") {
@@ -216,7 +231,7 @@ export class Lexer {
         return new Token(RPAREN, currentChar);
       }
 
-      this._error("getNextToken");
+      this._error("cannot recognize symbol " +  this.currentChar);
     }
 
     return new Token(EOF, null);

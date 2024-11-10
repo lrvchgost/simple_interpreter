@@ -8,7 +8,7 @@ import fs from 'fs';
 // import { INTEGER, MUL, PLUS } from "./helpers.js";
 import { Parser } from "./parser.js";
 
-const prog = fs.readFileSync('./test.pas', 'utf-8').toString();
+const prog = fs.readFileSync('./full-test.pas', 'utf-8').toString();
 
 console.log(prog)
 
@@ -30,6 +30,7 @@ console.log(prog)
 // var a = `BEGIN BEGIN number := 2;  END; x := 11; END.`;
 const lexer = new Lexer(prog);
 const parser = new Parser(lexer);
+// console.log(JSON.stringify(parser.parse(), null, 2));
 const translator = new BaseTranslator();
 const interpreter = new Interpreter(parser, translator);
 const result = interpreter.interpret();

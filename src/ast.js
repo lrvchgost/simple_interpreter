@@ -4,7 +4,7 @@ class AST {
   }
 
   visit() {
-    throw "AST: function visit is not implemented";
+    throw ("AST: function visit is not implemented", this.constructor.name);
   }
 }
 
@@ -51,11 +51,11 @@ export class Compaund extends AST {
   }
 
   push(nodes) {
-    this.children.push(...nodes);[]
+    this.children.push(...nodes);
   }
 
   visit(visitor) {
-   return  visitor.visitCompound(this);
+    return visitor.visitCompound(this);
   }
 }
 
@@ -91,5 +91,53 @@ export class NoOp extends AST {
 
   visit(visitor) {
     return visitor.visitNoOp(this);
+  }
+}
+
+export class Programm extends AST {
+  constructor(name, block) {
+    super();
+    this.name = name;
+    this.block = block;
+  }
+
+  visit(visitor) {
+    return visitor.visitForProgramm(this);
+  }
+}
+
+export class Block extends AST {
+  constructor(declarations, compoundStatement) {
+    super();
+    this.declarations = declarations;
+    this.compoundStatement = compoundStatement;
+  }
+
+  visit(visitor) {
+    return visitor.visitForBlock(this);
+  }
+}
+
+export class ValDecl extends AST {
+  constructor(varNode, typeNode) {
+    super();
+    this.varNode = varNode;
+    this.typeNode = typeNode;
+  }
+
+  visit(visitor) {
+    return visitor.visitForValDecl(this);
+  }
+}
+
+export class Type extends AST {
+  constructor(token) {
+    super();
+    this.token = token;
+    this.value = token.value;
+  }
+
+  visit(visitor) {
+    return visitor.visitForType(this);
   }
 }

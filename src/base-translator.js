@@ -1,4 +1,4 @@
-import { MINUS, PLUS, MUL, DIV } from "./helpers.js";
+import { MINUS, PLUS, MUL, FLOAT_DIV, INTEGER_DIV } from "./helpers.js";
 
 export class BaseTranslator {
   GLOBAL_SCOPE = {};
@@ -25,7 +25,14 @@ export class BaseTranslator {
       return left * right;
     }
 
-    if (node.op.type === DIV) {
+    if (node.op.type === INTEGER_DIV) {
+      const left = node.left.visit(this);
+      const right = node.right.visit(this);
+
+      return Math.trunc(left / right);
+    }
+
+    if (node.op.type === FLOAT_DIV) {
       const left = node.left.visit(this);
       const right = node.right.visit(this);
 
@@ -73,5 +80,25 @@ export class BaseTranslator {
     }
 
     return val;
+  }
+
+  visitForProgramm(node) {
+    return node.block.visit(this);
+  }
+
+  visitForBlock(node) {
+    for (let declaration of node.declarations)  {
+      declaration.visit(this);
+    }
+
+    node.compoundStatement.visit(this);
+  }
+
+  visitForValDecl(node) {
+    return;
+  }
+
+  visitForType(node) {
+    return;
   }
 }

@@ -3,7 +3,6 @@ import {
   MINUS,
   PLUS,
   MUL,
-  DIV,
   EOF,
   LPAREN,
   RPAREN,
@@ -13,6 +12,15 @@ import {
   SEMI,
   END,
   DOT,
+  REAL,
+  COMMA,
+  COLON,
+  PROGRAM,
+  INTEGER_DIV, 
+  FLOAT_DIV,
+  VAR,
+  INTEGER_CONST,
+  REAL_CONST,
 } from "./helpers.js";
 import {
   NumNode,
@@ -22,6 +30,10 @@ import {
   Var,
   Assign,
   Compaund,
+  Programm,
+  Block,
+  ValDecl,
+  Type,
 } from "./ast.js";
 
 export class Parser {
@@ -34,7 +46,17 @@ export class Parser {
     if (this._currentToken.type === tokenType) {
       this._currentToken = this._lexer.getNextToken();
     } else {
-      this._error("eat");
+      this._error(
+        JSON.stringify(
+          {
+            method: "eat",
+            currentToken: this._currentToken,
+            expectedToken: tokenType,
+          },
+          null,
+          4
+        )
+      );
     }
   }
 
@@ -44,6 +66,14 @@ export class Parser {
 
   _isEOF() {
     return this._currentToken.type === EOF;
+  }
+
+  _isSumSub() {
+    return [PLUS, MINUS].includes(this._currentToken.type);
+  }
+
+  _isMulDiv() {
+    return [MUL, INTEGER_DIV, FLOAT_DIV].includes(this._currentToken.type);
   }
 
   _factor() {
@@ -57,8 +87,11 @@ export class Parser {
       this._eat(MINUS);
       const node = new UnaryOpNode(token, this._factor());
       return node;
-    } else if (token.type === INTEGER) {
-      this._eat(INTEGER);
+    } else if (token.type === INTEGER_CONST) {
+      this._eat(INTEGER_CONST);
+      return new NumNode(token);
+    } else if (token.type === REAL_CONST) {
+      this._eat(REAL_CONST);
       return new NumNode(token);
     } else if (token.type === LPAREN) {
       this._eat(LPAREN);
@@ -68,14 +101,6 @@ export class Parser {
     } else {
       return this._variable();
     }
-  }
-
-  _isSumSub() {
-    return [PLUS, MINUS].includes(this._currentToken.type);
-  }
-
-  _isMulDiv() {
-    return [MUL, DIV].includes(this._currentToken.type);
   }
 
   _term() {
@@ -107,11 +132,19 @@ export class Parser {
   }
 
   _programm() {
-    debugger;
-    const node = this._compoundStatement();
+    this._eat(PROGRAM);
+
+    const varNode = this._variable();
+    const progName = varNode.value;
+
+    this._eat(SEMI);
+
+    const blockNode = this._block();
+    const programNode = new Programm(progName, blockNode);
+
     this._eat(DOT);
 
-    return node;
+    return programNode;
   }
 
   _compoundStatement() {
@@ -169,6 +202,66 @@ export class Parser {
   _variable() {
     const node = new Var(this._currentToken);
     this._eat(ID);
+    return node;
+  }
+
+  _block() {
+    const declarationsNode = this._declrations();
+    const compoundStatementNode = this._compoundStatement();
+    const node = new Block(declarationsNode, compoundStatementNode);
+
+    return node;
+  }
+
+  _declrations() {
+    const declarations = [];
+
+    if (this._currentToken.type === VAR) {
+      this._eat(VAR);
+
+      while(this._currentToken.type === ID) {
+        const valDecl = this._variableDeclaration();
+        declarations.push(...valDecl);
+        this._eat(SEMI);
+      }
+    }
+
+    return declarations;
+  }
+
+  _variableDeclaration() {
+    const varNodes = [new Var(this._currentToken)];
+
+    this._eat(ID);
+
+    while (this._currentToken.type === COMMA) {
+      this._eat(COMMA);
+
+      varNodes.push(new Var(this._currentToken));
+
+      this._eat(ID);
+    }
+
+    this._eat(COLON);
+
+    const typeNode = this._typeSpec();
+
+    const declarations = varNodes.map((node) => new ValDecl(node, typeNode));
+
+    return declarations;
+  }
+
+  _typeSpec() {
+    const token = this._currentToken;
+
+    if (token.type === INTEGER) {
+      this._eat(INTEGER);
+    } else {
+      this._eat(REAL);
+    }
+
+    const node = new Type(token);
+
     return node;
   }
 
