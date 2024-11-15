@@ -11,7 +11,7 @@ BEGIN {Part10}
       b := 10 * a + 10 * number DIV 4;
       c := a - - b
    END;
-   x := 11;
+   x := 11.2;
    y := 20 / 7 + 3.14;
    { writeln('a = ', a); }
    { writeln('b = ', b); }

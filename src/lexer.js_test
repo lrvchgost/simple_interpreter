@@ -1,26 +1,26 @@
 import {
   INTEGER,
-  MINUS,
-  PLUS,
-  MUL,
+  REAL,
   DIV,
+  BEGIN,
+  END,
+  PROGRAM,
+  PLUS,
+  MINUS,
+  INTEGER_DIV,
+  MUL,
   EOF,
   LPAREN,
   RPAREN,
-  BEGIN,
-  END,
   ID,
-  ASSIGN,
   SEMI,
-  DOT,
-  VAR,
-  REAL,
-  PROGRAM,
-  INTEGER_DIV,
-  INTEGER_CONST,
-  REAL_CONST,
   COLON,
   COMMA,
+  VAR,
+  REAL_CONST,
+  INTEGER_CONST,
+  ASSIGN,
+  DOT,
   FLOAT_DIV,
 } from "./helpers.js";
 
@@ -29,44 +29,41 @@ export class Token {
     this.type = type;
     this.value = value;
   }
-
-  toString() {
-    return `Token(${this.type}, ${this.value})`;
-  }
 }
 
 const RESERVED_KEYWORDS = {
-  [PROGRAM]: new Token(PROGRAM, PROGRAM),
-  [VAR]: new Token(VAR, VAR),
-  [DIV]: new Token(INTEGER_DIV, DIV),
-  [INTEGER]: new Token(INTEGER, INTEGER),
-  [REAL]: new Token(REAL, REAL),
-  [BEGIN]: new Token(BEGIN, BEGIN),
-  [END]: new Token(END, END),
+  DIV: new Token(INTEGER_DIV, DIV),
+  INTEGER: new Token(INTEGER, INTEGER),
+  REAL: new Token(REAL, REAL),
+  BEGIN: new Token(BEGIN, BEGIN),
+  END: new Token(END, END),
+  VAR: new Token(VAR, VAR),
+  PROGRAM: new Token(PROGRAM, PROGRAM),
 };
 
 export class Lexer {
   constructor(text) {
     this.text = text;
     this.pos = 0;
-    this.currentChar = text[this.pos];
+    this._currentChar = this.text[this.pos];
   }
 
-  _error(source) {
-    throw new Error("Error parsing input:" + source);
-  }
+  _advance() {
+    this.pos = this.pos + 1;
 
-  _peek() {
-    const pos = this.pos + 1;
-    if (pos > this.text.length - 1) {
-      return null;
+    if (this.pos > this.text.length - 1) {
+      this._currentChar = null;
     } else {
-      return this.text[pos];
+      this._currentChar = this.text[this.pos];
     }
   }
 
+  _isInteger() {
+    return Number.isInteger(parseInt(this._currentChar));
+  }
+
   _isAlphaChar() {
-    const code = this.currentChar.charCodeAt(0);
+    const code = this._currentChar.charCodeAt(0);
 
     if ((code > 64 && code < 91) || (code > 96 && code < 123)) {
       return true;
@@ -79,40 +76,45 @@ export class Lexer {
     return this._isInteger() || this._isAlphaChar();
   }
 
+  _isSpace() {
+    return this._currentChar === " " || this._currentChar === "\n";
+  }
+
+  _isEOF() {
+    return this._currentChar === null;
+  }
+
   _id() {
     let result = "";
 
     while (!this._isEOF() && this._isAlfaNum()) {
-      result += this.currentChar;
+      result += this._currentChar;
       this._advance();
     }
 
     return RESERVED_KEYWORDS[result.toUpperCase()] ?? new Token(ID, result);
   }
 
-  _isInteger() {
-    return Number.isInteger(parseInt(this.currentChar));
-  }
+  _number() {
+    let result = "";
 
-  _isSpace() {
-    return this.currentChar === " " || this.currentChar === "\n";
-  }
-
-  _skipComment() {
-    while (!this._isEOF() && this.currentChar !== "}") {
+    while (!this._isEOF() && this._isInteger()) {
+      result += this._currentChar;
       this._advance();
     }
 
-    this._advance();
-  }
+    if (this._currentChar === ".") {
+      result += this._currentChar;
 
-  _advance() {
-    this.pos++;
+      this._advance();
 
-    if (this.pos > this.text.length - 1) {
-      this.currentChar = null;
+      while (!this._isEOF() && this._isInteger()) {
+        result += this._currentChar;
+        this._advance();
+      }
+      return new Token(REAL_CONST, Number(result));
     } else {
-      this.currentChar = this.text[this.pos];
+      return new Token(INTEGER_CONST, Number(result));
     }
   }
 
@@ -122,35 +124,24 @@ export class Lexer {
     }
   }
 
-  _number() {
-    let result = "";
-
-    while (!this._isEOF() && this._isInteger()) {
-      result += this.currentChar;
+  _skipComment() {
+    while (!this._isEOF() && this._currentChar !== "}") {
       this._advance();
     }
 
-    if (this.currentChar === ".") {
-      result += this.currentChar;
+    this._advance();
+  }
 
-      this._advance();
+  _peek() {
+    const pos = this.pos + 1;
 
-      while (!this._isEOF() && this._isInteger()) {
-        result += this.currentChar;
-        this._advance();
-      }
-
-      return new Token(REAL_CONST, Number(result));
+    if (pos > this.text.length - 1) {
+      return null;
     } else {
-      return new Token(INTEGER_CONST, Number(result));
+      return this.text[pos];
     }
   }
 
-  _isEOF() {
-    return this.currentChar === null;
-  }
-
-  // Tokenizer
   getNextToken() {
     while (!this._isEOF()) {
       if (this._isSpace()) {
@@ -158,7 +149,7 @@ export class Lexer {
         continue;
       }
 
-      if (this.currentChar === "{") {
+      if (this._currentChar === "{") {
         this._advance();
         this._skipComment();
         continue;
@@ -172,7 +163,7 @@ export class Lexer {
         return this._id();
       }
 
-      let currentChar = this.currentChar;
+      const currentChar = this._currentChar;
 
       if (currentChar === ":" && this._peek() === "=") {
         this._advance();
@@ -185,11 +176,6 @@ export class Lexer {
         return new Token(COLON, currentChar);
       }
 
-      if (currentChar === ",") {
-        this._advance();
-        return new Token(COMMA, currentChar);
-      }
-
       if (currentChar === ";") {
         this._advance();
         return new Token(SEMI, currentChar);
@@ -199,6 +185,11 @@ export class Lexer {
         this._advance();
         return new Token(DOT, currentChar);
       }
+
+      // if (currentChar === ".") {
+      //   this._advance();
+      //   return new Token(DOT, currentChar);
+      // }
 
       if (currentChar === "+") {
         this._advance();
@@ -220,6 +211,11 @@ export class Lexer {
         return new Token(FLOAT_DIV, currentChar);
       }
 
+      if (currentChar === ",") {
+        this._advance();
+        return new Token(COMMA, currentChar);
+      }
+
       if (currentChar === "(") {
         this._advance();
         return new Token(LPAREN, currentChar);
@@ -229,10 +225,7 @@ export class Lexer {
         this._advance();
         return new Token(RPAREN, currentChar);
       }
-
-      this._error("cannot recognize symbol " +  this.currentChar);
     }
-
     return new Token(EOF, null);
   }
 }

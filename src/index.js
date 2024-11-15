@@ -12,22 +12,6 @@ const prog = fs.readFileSync('./full-test.pas', 'utf-8').toString();
 
 console.log(prog)
 
-// const expression = process.argv.slice(2)[0];
-
-// var b = `
-// BEGIN
-//
-//     BEGIN
-//         number := 2;
-//         a := number;
-//         b := 10 * a + 10 * number div 4;
-//         c := a - - b;
-//     END;
-//
-//     x := 11;
-// END.`;
-
-// var a = `BEGIN BEGIN number := 2;  END; x := 11; END.`;
 const lexer = new Lexer(prog);
 const parser = new Parser(lexer);
 // console.log(JSON.stringify(parser.parse(), null, 2));
@@ -37,7 +21,7 @@ const result = interpreter.interpret();
 
 process.stdout.write(result + "\n");
 
-console.log(interpreter.visitor.GLOBAL_SCOPE);
+console.log('GLOBAL_SCOPE', interpreter.visitor.GLOBAL_SCOPE);
 
 // 7 + 3 * 4
 
