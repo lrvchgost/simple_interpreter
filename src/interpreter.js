@@ -1,16 +1,24 @@
 export class Interpreter {
-  constructor(parser, visitor) {
+  constructor(parser, symbolBuilder, translator) {
     this.parser = parser;
-    this.visitor = visitor;
+    this.symbolBuilder = symbolBuilder;
+    this.translator = translator;
   }
 
   interpret() {
     const ast = this.parser.parse();
-    return this.visit(ast);
+
+    this.staticAnalisys(ast);
+
+    return this.traslate(ast);
   }
 
-  visit(ast) {
-    const result =  ast.visit(this.visitor);
+  staticAnalisys(ast) {
+    ast.visit(this.symbolBuilder);
+  }
+
+  traslate(ast) {
+    const result = ast.visit(this.translator);
 
     return result;
   }

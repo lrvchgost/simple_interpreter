@@ -1,27 +1,30 @@
 import { Interpreter } from "./interpreter.js";
 import { Lexer } from "./lexer.js";
 import { BaseTranslator } from "./base-translator.js";
-import fs from 'fs';
+import { SymbolTableBuilder } from "./SymbolTableBuilder.js";
+import fs from "fs";
 // import { InfixToPostfixTranslator } from './infix-to-postfix-translator';
 // import { InfixToLispTranslator } from './infix-to-lisp-tanslator.js';
 // import { NumNode, BinOpNode } from "./ast.js";
 // import { INTEGER, MUL, PLUS } from "./helpers.js";
 import { Parser } from "./parser.js";
 
-const prog = fs.readFileSync('./full-test.pas', 'utf-8').toString();
+const prog = fs.readFileSync("./full-test.pas", "utf-8").toString();
 
-console.log(prog)
+console.log(prog);
 
 const lexer = new Lexer(prog);
 const parser = new Parser(lexer);
 // console.log(JSON.stringify(parser.parse(), null, 2));
+const symbolBuilder = new SymbolTableBuilder();
 const translator = new BaseTranslator();
-const interpreter = new Interpreter(parser, translator);
+const interpreter = new Interpreter(parser, symbolBuilder, translator);
 const result = interpreter.interpret();
 
 process.stdout.write(result + "\n");
 
-console.log('GLOBAL_SCOPE', interpreter.visitor.GLOBAL_SCOPE);
+console.log("GLOBAL_SCOPE", interpreter.translator.GLOBAL_SCOPE);
+console.log("SymbolTable", interpreter.symbolBuilder.toString());
 
 // 7 + 3 * 4
 
