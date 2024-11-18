@@ -22,6 +22,7 @@ import {
   COLON,
   COMMA,
   FLOAT_DIV,
+  PROCEDURE,
 } from "./helpers.js";
 
 export class Token {
@@ -43,6 +44,7 @@ const RESERVED_KEYWORDS = {
   [REAL]: new Token(REAL, REAL),
   [BEGIN]: new Token(BEGIN, BEGIN),
   [END]: new Token(END, END),
+  [PROCEDURE]: new Token(PROCEDURE, PROCEDURE),
 };
 
 export class Lexer {

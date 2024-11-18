@@ -5,6 +5,7 @@ import {
   Compaund,
   NoOp,
   NumNode,
+  Procedure,
   Programm,
   Type,
   UnaryOpNode,
@@ -34,6 +35,7 @@ import {
   ASSIGN,
   LPAREN,
   RPAREN,
+  PROCEDURE,
 } from "./helpers.js";
 
 export class Parser {
@@ -112,6 +114,22 @@ export class Parser {
         declarations.push(...varDecl);
         this._eat(SEMI);
       }
+    }
+
+    if (this._currentToken.type === PROCEDURE) {
+      this._eat(PROCEDURE);
+
+      const procName = this._currentToken.value;
+
+      this._eat(ID);
+      this._eat(SEMI);
+
+      const procBlock = this._block();
+      const procNode = new Procedure(procName, procBlock);
+
+      declarations.push(procNode);
+
+      this._eat(SEMI);
     }
 
     return declarations;
@@ -199,10 +217,10 @@ export class Parser {
 
   _assignmentStatment() {
     let left = this._variable();
-    const token = this._currentToken;
+    const assignToken = this._currentToken;
     this._eat(ASSIGN);
     const right = this._expr();
-    const node = new Assign(left, token, right);
+    const node = new Assign(left, assignToken, right);
     return node;
   }
 

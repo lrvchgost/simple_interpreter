@@ -22,6 +22,7 @@ const INTEGER_DIV = "INTEGER_DIV";
 const FLOAT_DIV = "FLOAT_DIV";
 const INTEGER_CONST = "INTEGER_CONST";
 const REAL_CONST = "REAL_CONST";
+const PROCEDURE = "PROCEDURE";
 
 export {
   INTEGER,
@@ -48,4 +49,5 @@ export {
   COLON,
   COMMA,
   FLOAT_DIV,
+  PROCEDURE,
 };

@@ -9,7 +9,7 @@ import fs from "fs";
 // import { INTEGER, MUL, PLUS } from "./helpers.js";
 import { Parser } from "./parser.js";
 
-const prog = fs.readFileSync("./full-test.pas", "utf-8").toString();
+const prog = fs.readFileSync("./source/Part12.pas", "utf-8").toString();
 
 console.log(prog);
 

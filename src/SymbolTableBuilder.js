@@ -52,7 +52,7 @@ export class SymbolTableBuilder {
     const symbol = this.symbolTable.lookup(varName);
 
     if (symbol === undefined) {
-      throw `[visitVar]: Variable ${varName} must be declared first`;
+      throw `Error: Symbol(identifier) not found ${varName}`;
     }
   }
 
@@ -61,10 +61,14 @@ export class SymbolTableBuilder {
     const symbol = this.symbolTable.lookup(varName);
 
     if (symbol === undefined) {
-      throw `[visitAssign]: Variable ${varName} must be declared first`;
+      throw `Error: Symbol(identifier) not found ${varName}`;
     }
 
     node.right.visit(this);
+  }
+
+  visitProcedure(node) {
+    return;
   }
 
   toString() {

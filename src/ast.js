@@ -47,6 +47,19 @@ export class ValDecl extends AST {
   }
 }
 
+export class Procedure extends AST {
+  constructor(procName, procBlock) {
+    super();
+
+    this.procName = procName;
+    this.procBlock = procBlock;
+  }
+
+  visit(visitor) {
+    visitor.visitProcedure(this);
+  }
+}
+
 export class Type extends AST {
   constructor(token) {
     super(token);

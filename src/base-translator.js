@@ -89,4 +89,8 @@ export class BaseTranslator {
   visitForType(node) {
     return;
   }
+
+  visitProcedure(node) {
+    return;
+  }
 }
