@@ -44,6 +44,12 @@ export class SymbolTableBuilder {
     const varName = node.varNode.value;
     const varSymbol = new VarSymbol(varName, typeSymbol);
 
+    const defined = this.symbolTable.lookup(varName);
+
+    if (defined) {
+      throw `Error: Duplicate identifier "${varName}" found`;
+    }
+
     this.symbolTable.define(varSymbol);
   }
 
@@ -52,7 +58,7 @@ export class SymbolTableBuilder {
     const symbol = this.symbolTable.lookup(varName);
 
     if (symbol === undefined) {
-      throw `Error: Symbol(identifier) not found ${varName}`;
+      throw `Error: Symbol(identifier) not found "${varName}"`;
     }
   }
 
@@ -61,7 +67,7 @@ export class SymbolTableBuilder {
     const symbol = this.symbolTable.lookup(varName);
 
     if (symbol === undefined) {
-      throw `Error: Symbol(identifier) not found ${varName}`;
+      throw `Error: Symbol(identifier) not found "${varName}"`;
     }
 
     node.right.visit(this);
