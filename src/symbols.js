@@ -28,11 +28,25 @@ export class VarSymbol extends Symbol {
   }
 }
 
-export class SymbolTable {
+export class ProcedureSymbol extends Symbol {
+  constructor(name, params = []) {
+    super(name);
+
+    this.params = params ?? [];
+  }
+
+  toString() {
+    return `<${this.name}: ${this.params.map(param => param.toString())}>`;
+  }
+}
+
+export class ScopedSymbolTable {
   _symbols = new Map();
 
-  constructor() {
-    this.initBuilins();
+  constructor(scopeName, scopeLevel, enclosingScope = null) {
+    this.scopeName = scopeName;
+    this.scopeLevel = scopeLevel;
+    this.enclosingScope = enclosingScope;
   }
 
   initBuilins() {
@@ -41,14 +55,35 @@ export class SymbolTable {
   }
 
   define(symbol) {
+    // console.log(`Define: ${symbol.name}. (Scope name: ${this.scopeName})`);
     this._symbols.set(symbol.name, symbol);
+    symbol.scope = this;
   }
 
-  lookup(name) {
-    return this._symbols.get(name);
+  lookup(name, currentScopeOnly) {
+    // console.log(`Lookup: ${name}. (Scope name: ${this.scopeName})`);
+    const symbol = this._symbols.get(name);
+
+    if (symbol) {
+      return symbol;
+    }
+
+    if (currentScopeOnly) {
+      return undefined;
+    }
+
+    if (this.enclosingScope) {
+      return this.enclosingScope.lookup(name);
+    }
   }
 
   toString() {
-    return [...this._symbols.entries()].map(([_, symbol]) => symbol.toString())
+//     return `--------------------------------------------------------
+// SCOPE (SCOPED SYMBOL TABLE)
+// Scope name: ${this.scopeName}
+// Scope level: ${this.scopeLevel}
+// Enclosing scope: ${this.enclosingScope?.scopeName ?? null}
+// ${[...this._symbols.entries()].map(([_, symbol]) => symbol.toString())}
+// `;
   }
 }

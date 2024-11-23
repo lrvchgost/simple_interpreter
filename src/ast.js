@@ -47,16 +47,17 @@ export class ValDecl extends AST {
   }
 }
 
-export class Procedure extends AST {
-  constructor(procName, procBlock) {
+export class ProcedureDecl extends AST {
+  constructor(procName, params, procBlock) {
     super();
 
     this.procName = procName;
+    this.params = params;
     this.procBlock = procBlock;
   }
 
   visit(visitor) {
-    visitor.visitProcedure(this);
+    return visitor.visitProcedureDecl(this);
   }
 }
 
@@ -157,5 +158,18 @@ export class BinOpNode extends AST {
 
   visit(visitor) {
     return visitor.visitForBinOp(this);
+  }
+}
+
+export class Param extends AST {
+  constructor(varNode, typeNode) {
+    super();
+
+    this.varNode = varNode;
+    this.typeNode = typeNode;
+  }
+
+  visit(visitor) {
+    visitor.visitParam(this);
   }
 }

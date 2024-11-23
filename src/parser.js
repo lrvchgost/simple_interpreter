@@ -5,7 +5,7 @@ import {
   Compaund,
   NoOp,
   NumNode,
-  Procedure,
+  ProcedureDecl,
   Programm,
   Type,
   UnaryOpNode,
@@ -106,30 +106,39 @@ export class Parser {
   _declrations() {
     const declarations = [];
 
-    if (this._currentToken.type === VAR) {
-      this._eat(VAR);
+    while (true) {
+      if (this._currentToken.type === VAR) {
+        this._eat(VAR);
 
-      while (this._currentToken.type === ID) {
-        const varDecl = this._variableDeclaration();
-        declarations.push(...varDecl);
+        while (this._currentToken.type === ID) {
+          const varDecl = this._variableDeclaration();
+          declarations.push(...varDecl);
+          this._eat(SEMI);
+        }
+      } else if (this._currentToken.type === PROCEDURE) {
+        this._eat(PROCEDURE);
+
+        const procName = this._currentToken.value;
+
+        this._eat(ID);
+
+        let params = [];
+
+        if (this._currentToken.type === LPAREN) {
+          this._eat(LPAREN);
+          params = this._formalParametrsList();
+          this._eat(RPAREN);
+        }
+
         this._eat(SEMI);
+
+        const procBlock = this._block();
+        const procNode = new ProcedureDecl(procName, params, procBlock);
+        declarations.push(procNode);
+        this._eat(SEMI);
+      } else {
+        break;
       }
-    }
-
-    if (this._currentToken.type === PROCEDURE) {
-      this._eat(PROCEDURE);
-
-      const procName = this._currentToken.value;
-
-      this._eat(ID);
-      this._eat(SEMI);
-
-      const procBlock = this._block();
-      const procNode = new Procedure(procName, procBlock);
-
-      declarations.push(procNode);
-
-      this._eat(SEMI);
     }
 
     return declarations;
@@ -150,6 +159,34 @@ export class Parser {
     const declarations = varNodes.map((node) => new ValDecl(node, typeNode));
 
     return declarations;
+  }
+
+  _formalParametrsList() {
+    const params = [...this._formalParametrs()];
+
+    if (this._currentToken.type === SEMI) {
+      this._eat(SEMI);
+      params.push(...this._formalParametrs());
+    }
+
+    return params;
+  }
+
+  _formalParametrs() {
+    const paramsNodes = [this._variable()];
+
+    while (this._currentToken.type === COMMA) {
+      this._eat(COMMA);
+      paramsNodes.push(this._variable());
+    }
+
+    this._eat(COLON);
+
+    const typeNode = this._typeSpec();
+
+    const params = paramsNodes.map((node) => new ValDecl(node, typeNode));
+
+    return params;
   }
 
   _typeSpec() {
@@ -231,7 +268,7 @@ export class Parser {
   _expr() {
     let node = this._term();
 
-    while(!this._isEOF() && this._isSumSub()) {
+    while (!this._isEOF() && this._isSumSub()) {
       const token = this._currentToken;
 
       this._eat(token.type);
@@ -245,12 +282,12 @@ export class Parser {
   _term() {
     let node = this._factor();
 
-    while(!this._isEOF() && this._isMulDiv()) {
+    while (!this._isEOF() && this._isMulDiv()) {
       const token = this._currentToken;
 
       this._eat(token.type);
 
-      node = new BinOpNode(node, token, this._factor())
+      node = new BinOpNode(node, token, this._factor());
     }
 
     return node;
@@ -283,6 +320,8 @@ export class Parser {
 
   parse() {
     const node = this._programm();
+
+    // console.log(this._stringify(node));
 
     if (this._currentToken.type !== EOF) {
       this.error("[Parser:parse]: invalid parse result");

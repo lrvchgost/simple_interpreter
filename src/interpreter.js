@@ -1,7 +1,7 @@
 export class Interpreter {
-  constructor(parser, symbolBuilder, translator) {
+  constructor(parser, semanticAnalizer, translator) {
     this.parser = parser;
-    this.symbolBuilder = symbolBuilder;
+    this.semanticAnalizer = semanticAnalizer;
     this.translator = translator;
   }
 
@@ -10,11 +10,12 @@ export class Interpreter {
 
     this.staticAnalisys(ast);
 
+    // return ast;
     return this.traslate(ast);
   }
 
   staticAnalisys(ast) {
-    ast.visit(this.symbolBuilder);
+    ast.visit(this.semanticAnalizer);
   }
 
   traslate(ast) {
