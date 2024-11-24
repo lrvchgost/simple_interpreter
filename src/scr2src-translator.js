@@ -4,7 +4,7 @@ export class Src2srcTranslator {
   currentScope = null;
 
   constructor() {
-    const scope = new ScopedSymbolTable("builtin", 0, this.currentScope);
+    const scope = new ScopedSymbolTable("builtin", 0, this.currentScope, false);
     scope.initBuilins();
 
     this.currentScope = scope;
@@ -15,7 +15,8 @@ export class Src2srcTranslator {
     const scope = new ScopedSymbolTable(
       "global",
       this.currentScope.scopeLevel + 1,
-      this.currentScope
+      this.currentScope,
+      false
     );
 
     let resultStr = `program ${node.name}0;\n`;
@@ -96,12 +97,6 @@ export class Src2srcTranslator {
     const varName = node.varNode.value;
     const varSymbol = new VarSymbol(varName, typeSymbol);
 
-    const defined = this.currentScope.lookup(varName, true);
-
-    if (defined) {
-      throw `Error: Duplicate identifier "${varName}" found`;
-    }
-
     this.currentScope.define(varSymbol);
 
     const level = this.getLevel();
@@ -112,12 +107,6 @@ export class Src2srcTranslator {
   visitVar(node) {
     const varName = node.value;
     const symbol = this.currentScope.lookup(varName);
-
-    console.log(symbol.scope.scopeLevel)
-
-    if (symbol === undefined) {
-      throw `Error: Symbol(identifier) not found "${varName}"`;
-    }
 
     return `<${symbol.name}${symbol.scope.scopeLevel} : ${symbol.type}>`;
   }
@@ -139,7 +128,8 @@ export class Src2srcTranslator {
     const procedureScope = new ScopedSymbolTable(
       procName,
       this.currentScope.scopeLevel + 1,
-      this.currentScope
+      this.currentScope,
+      false
     );
 
     this.currentScope = procedureScope;

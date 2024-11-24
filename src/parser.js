@@ -12,31 +12,9 @@ import {
   ValDecl,
   Var,
 } from "./ast.js";
-import {
-  INTEGER_CONST,
-  REAL_CONST,
-  INTEGER,
-  REAL,
-  ID,
-  EOF,
-  FLOAT_DIV,
-  INTEGER_DIV,
-  MINUS,
-  MUL,
-  PLUS,
-  PROGRAM,
-  SEMI,
-  DOT,
-  VAR,
-  COMMA,
-  COLON,
-  BEGIN,
-  END,
-  ASSIGN,
-  LPAREN,
-  RPAREN,
-  PROCEDURE,
-} from "./helpers.js";
+import { ErrorCode, ErrorCodeEnum } from "./error/codes.js";
+import { ParserError } from "./error/errors.js";
+import { TokenType } from "./helpers.js";
 
 export class Parser {
   constructor(lexer) {
@@ -45,52 +23,54 @@ export class Parser {
     this._currentToken = this.lexer.getNextToken();
   }
 
-  _error(source) {
-    throw `[Parser]: Invalid syntax ${source}`;
+  _error(errorCode, token) {
+    const error = new ErrorCode(errorCode);
+    throw new ParserError(errorCode, token, `${error.value} -> ${token}`);
   }
 
   _eat(tokenType) {
     if (this._currentToken.type === tokenType) {
       this._currentToken = this.lexer.getNextToken();
     } else {
-      this._error(
-        JSON.stringify(
-          {
-            method: "eat",
-            currentToken: this._currentToken,
-            expectedToken: tokenType,
-          },
-          null,
-          4
-        )
-      );
+      this._error(ErrorCodeEnum.UNEXPECTED_ERROR, this._currentToken);
+      // this._error(
+      //   JSON.stringify(
+      //     {
+      //       method: "eat",
+      //       currentToken: this._currentToken,
+      //       expectedToken: tokenType,
+      //     },
+      //     null,
+      //     4
+      //   )
+      // );
     }
   }
 
   _isEOF() {
-    return this._currentToken === EOF;
+    return this._currentToken === TokenType.EOF;
   }
 
   _isMulDiv() {
-    return [MUL, INTEGER_DIV, FLOAT_DIV].includes(this._currentToken.type);
+    return [TokenType.MUL, TokenType.INTEGER_DIV, TokenType.FLOAT_DIV].includes(this._currentToken.type);
   }
 
   _isSumSub() {
-    return [PLUS, MINUS].includes(this._currentToken.type);
+    return [TokenType.PLUS, TokenType.MINUS].includes(this._currentToken.type);
   }
 
   _programm() {
-    this._eat(PROGRAM);
+    this._eat(TokenType.PROGRAM);
 
     const varNode = this._variable();
     const progName = varNode.value;
 
-    this._eat(SEMI);
+    this._eat(TokenType.SEMI);
 
     const blockNode = this._block();
     const progNode = new Programm(progName, blockNode);
 
-    this._eat(DOT);
+    this._eat(TokenType.DOT);
 
     return progNode;
   }
@@ -107,35 +87,18 @@ export class Parser {
     const declarations = [];
 
     while (true) {
-      if (this._currentToken.type === VAR) {
-        this._eat(VAR);
+      if (this._currentToken.type === TokenType.VAR) {
+        this._eat(TokenType.VAR);
 
-        while (this._currentToken.type === ID) {
+        while (this._currentToken.type === TokenType.ID) {
           const varDecl = this._variableDeclaration();
           declarations.push(...varDecl);
-          this._eat(SEMI);
+          this._eat(TokenType.SEMI);
         }
-      } else if (this._currentToken.type === PROCEDURE) {
-        this._eat(PROCEDURE);
-
-        const procName = this._currentToken.value;
-
-        this._eat(ID);
-
-        let params = [];
-
-        if (this._currentToken.type === LPAREN) {
-          this._eat(LPAREN);
-          params = this._formalParametrsList();
-          this._eat(RPAREN);
-        }
-
-        this._eat(SEMI);
-
-        const procBlock = this._block();
-        const procNode = new ProcedureDecl(procName, params, procBlock);
+      } else if (this._currentToken.type === TokenType.PROCEDURE) {
+        const procNode = this._procedureDeclarations();
         declarations.push(procNode);
-        this._eat(SEMI);
+        this._eat(TokenType.SEMI);
       } else {
         break;
       }
@@ -144,15 +107,38 @@ export class Parser {
     return declarations;
   }
 
+  _procedureDeclarations() {
+    this._eat(TokenType.PROCEDURE);
+
+    const procName = this._currentToken.value;
+
+    this._eat(TokenType.ID);
+
+    let params = [];
+
+    if (this._currentToken.type === TokenType.LPAREN) {
+      this._eat(TokenType.LPAREN);
+      params = this._formalParametrsList();
+      this._eat(TokenType.RPAREN);
+    }
+
+    this._eat(TokenType.SEMI);
+
+    const procBlock = this._block();
+    const procNode = new ProcedureDecl(procName, params, procBlock);
+
+    return procNode;
+  }
+
   _variableDeclaration() {
     const varNodes = [this._variable()];
 
-    while (this._currentToken.type === COMMA) {
-      this._eat(COMMA);
+    while (this._currentToken.type === TokenType.COMMA) {
+      this._eat(TokenType.COMMA);
       varNodes.push(this._variable());
     }
 
-    this._eat(COLON);
+    this._eat(TokenType.COLON);
 
     const typeNode = this._typeSpec();
 
@@ -164,8 +150,8 @@ export class Parser {
   _formalParametrsList() {
     const params = [...this._formalParametrs()];
 
-    if (this._currentToken.type === SEMI) {
-      this._eat(SEMI);
+    if (this._currentToken.type === TokenType.SEMI) {
+      this._eat(TokenType.SEMI);
       params.push(...this._formalParametrs());
     }
 
@@ -175,12 +161,12 @@ export class Parser {
   _formalParametrs() {
     const paramsNodes = [this._variable()];
 
-    while (this._currentToken.type === COMMA) {
-      this._eat(COMMA);
+    while (this._currentToken.type === TokenType.COMMA) {
+      this._eat(TokenType.COMMA);
       paramsNodes.push(this._variable());
     }
 
-    this._eat(COLON);
+    this._eat(TokenType.COLON);
 
     const typeNode = this._typeSpec();
 
@@ -193,10 +179,10 @@ export class Parser {
     const token = this._currentToken;
     const node = new Type(token);
 
-    if (token.type === INTEGER) {
-      this._eat(INTEGER);
+    if (token.type === TokenType.INTEGER) {
+      this._eat(TokenType.INTEGER);
     } else {
-      this._eat(REAL);
+      this._eat(TokenType.REAL);
     }
 
     return node;
@@ -204,17 +190,17 @@ export class Parser {
 
   _variable() {
     const node = new Var(this._currentToken);
-    this._eat(ID);
+    this._eat(TokenType.ID);
 
     return node;
   }
 
   _compoundStatement() {
-    this._eat(BEGIN);
+    this._eat(TokenType.BEGIN);
 
     const statements = this._statementsList();
 
-    this._eat(END);
+    this._eat(TokenType.END);
 
     const compound = new Compaund();
 
@@ -226,13 +212,13 @@ export class Parser {
   _statementsList() {
     const result = [this._statement()];
 
-    while (this._currentToken.type === SEMI) {
-      this._eat(SEMI);
+    while (this._currentToken.type === TokenType.SEMI) {
+      this._eat(TokenType.SEMI);
       result.push(this._statement());
     }
 
-    if (this._currentToken.type === ID) {
-      this._error("_statementsList");
+    if (this._currentToken.type === TokenType.ID) {
+      this._error(ErrorCodeEnum.UNEXPECTED_ERROR, this._currentToken);
     }
 
     return result;
@@ -241,9 +227,9 @@ export class Parser {
   _statement() {
     let node;
 
-    if (this._currentToken.type === BEGIN) {
+    if (this._currentToken.type === TokenType.BEGIN) {
       node = this._compoundStatement();
-    } else if (this._currentToken.type === ID) {
+    } else if (this._currentToken.type === TokenType.ID) {
       node = this._assignmentStatment();
     } else {
       node = this._empty();
@@ -255,7 +241,7 @@ export class Parser {
   _assignmentStatment() {
     let left = this._variable();
     const assignToken = this._currentToken;
-    this._eat(ASSIGN);
+    this._eat(TokenType.ASSIGN);
     const right = this._expr();
     const node = new Assign(left, assignToken, right);
     return node;
@@ -296,22 +282,22 @@ export class Parser {
   _factor() {
     const token = this._currentToken;
 
-    if (token.type === PLUS) {
-      this._eat(PLUS);
+    if (token.type === TokenType.PLUS) {
+      this._eat(TokenType.PLUS);
       return new UnaryOpNode(token, this._factor());
-    } else if (token.type === MINUS) {
-      this._eat(MINUS);
+    } else if (token.type === TokenType.MINUS) {
+      this._eat(TokenType.MINUS);
       return new UnaryOpNode(token, this._factor());
-    } else if (token.type === INTEGER_CONST) {
-      this._eat(INTEGER_CONST);
+    } else if (token.type === TokenType.INTEGER_CONST) {
+      this._eat(TokenType.INTEGER_CONST);
       return new NumNode(token);
-    } else if (token.type === REAL_CONST) {
-      this._eat(REAL_CONST);
+    } else if (token.type === TokenType.REAL_CONST) {
+      this._eat(TokenType.REAL_CONST);
       return new NumNode(token);
-    } else if (token.type === LPAREN) {
-      this._eat(LPAREN);
+    } else if (token.type === TokenType.LPAREN) {
+      this._eat(TokenType.LPAREN);
       const node = this._expr();
-      this._eat(RPAREN);
+      this._eat(TokenType.RPAREN);
       return node;
     } else {
       return this._variable();
@@ -323,15 +309,11 @@ export class Parser {
 
     // console.log(this._stringify(node));
 
-    if (this._currentToken.type !== EOF) {
+    if (this._currentToken.type !== TokenType.EOF) {
       this.error("[Parser:parse]: invalid parse result");
     }
 
     return node;
-  }
-
-  _error(message) {
-    throw message;
   }
 
   _stringify(node) {

@@ -1,12 +1,13 @@
+import { ErrorCodeEnum, ErrorCode } from "./error/codes.js";
+import { SemanticError } from "./error/errors.js";
 import { ProcedureSymbol, ScopedSymbolTable, VarSymbol } from "./symbols.js";
+import { isScope } from './init.js';
 
 export class SemanticAnalizer {
   currentScope = null;
 
   constructor(isLoging) {
-    if (this.isLoging) {
-      console.log("> ===== Create builtin scope ");
-    }
+    this._log("> ===== Create builtin scope ");
     const scope = new ScopedSymbolTable("builtin", 0, this.currentScope);
     scope.initBuilins();
 
@@ -15,9 +16,8 @@ export class SemanticAnalizer {
   }
 
   visitForProgramm(node) {
-    if (this.isLoging) {
-      console.log("> ===== ENTER global scope");
-    }
+    console.log('hey')
+    this._log("> ===== ENTER global scope");
     this.currentScope.define(new VarSymbol(node.name));
     const scope = new ScopedSymbolTable(
       "global",
@@ -29,15 +29,10 @@ export class SemanticAnalizer {
 
     node.block.visit(this);
 
-    if (this.isLoging) {
-      console.log(scope.toString());
-    }
+    this._log(scope.toString());
     this.currentScope = scope.enclosingScope;
-    if (this.isLoging) {
-      console.log("< ===== LEAVE global scope");
-
-      console.log(this.currentScope.toString());
-    }
+    this._log("< ===== LEAVE global scope");
+    this._log(this.currentScope.toString());
   }
 
   visitForBlock(node) {
@@ -80,7 +75,7 @@ export class SemanticAnalizer {
     const defined = this.currentScope.lookup(varName, true);
 
     if (defined) {
-      throw `Error: Duplicate identifier "${varName}" found`;
+      this._error(ErrorCodeEnum.DUPLICATE_ID, node.varNode.token);
     }
 
     this.currentScope.define(varSymbol);
@@ -91,7 +86,7 @@ export class SemanticAnalizer {
     const symbol = this.currentScope.lookup(varName);
 
     if (symbol === undefined) {
-      throw `Error: Symbol(identifier) not found "${varName}"`;
+      this._error(ErrorCodeEnum.ID_NOT_FOUND, node.token);
     }
   }
 
@@ -112,7 +107,7 @@ export class SemanticAnalizer {
     this.currentScope.define(procSymbol);
 
     if (this.isLoging) {
-      console.log("> ==== ENTER proc scope ", procName);
+      this._log("> ==== ENTER proc scope ", procName);
     }
 
     const procedureScope = new ScopedSymbolTable(
@@ -133,16 +128,23 @@ export class SemanticAnalizer {
 
     node.procBlock.visit(this);
 
-    if (this.isLoging) {
-      console.log(procedureScope.toString());
-    }
+    this._log(procedureScope.toString());
     this.currentScope = this.currentScope.enclosingScope;
-    if (this.isLoging) {
-      console.log(`< ===== LEAVE proc scope ${procName}`);
-    }
+    this._log(`< ===== LEAVE proc scope ${procName}`);
   }
 
   toString() {
     return this.scope.toString();
+  }
+
+  _error(errorCode, token) {
+    const error = new ErrorCode(errorCode);
+    throw new SemanticError(errorCode, token, `${error.value} -> ${token}`);
+  }
+
+  _log(message) {
+    if (isScope) {
+      console.log(message);
+    }
   }
 }

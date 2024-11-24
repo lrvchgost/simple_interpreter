@@ -10,11 +10,14 @@ import fs from "fs";
 // import { INTEGER, MUL, PLUS } from "./helpers.js";
 import { Parser } from "./parser.js";
 
-const prog = fs.readFileSync("./source/scope03.pas", "utf-8").toString();
+const prog = fs.readFileSync("./source/scope02.pas", "utf-8").toString();
 
 console.log(prog);
 
 const lexer = new Lexer(prog);
+// while (lexer.currentChar !== null) {
+//   console.log(lexer.getNextToken());
+// }
 const parser = new Parser(lexer);
 // console.log(JSON.stringify(parser.parse(), null, 2));
 const semanticAnalizer = new SemanticAnalizer();
@@ -23,7 +26,7 @@ const src2srcTranslator = new Src2srcTranslator();
 const interpreter = new Interpreter(parser, semanticAnalizer, src2srcTranslator);
 const result = interpreter.interpret();
 
-process.stdout.write(result + "\n");
+// process.stdout.write(result + "\n");
 
 fs.writeFileSync('./test.pas', result);
 

@@ -1,53 +1,71 @@
-const INTEGER = "INTEGER";
-const PLUS = "PLUS";
-const MINUS = "MINUS";
-const MUL = "MUL";
-const DIV = "DIV";
-const EOF = "EOF";
-const SPACE = "SPACE";
-const LPAREN = "(";
-const RPAREN = ")";
-const BEGIN = "BEGIN";
-const END = "END";
-const ID = "ID";
-const DOT = "DOT";
-const ASSIGN = "ASSIGN";
-const SEMI = "SEMI";
-const COLON = "COLON";
-const COMMA = "COMMA";
-const VAR = "VAR";
-const REAL = "REAL";
-const PROGRAM = "PROGRAM";
-const INTEGER_DIV = "INTEGER_DIV";
-const FLOAT_DIV = "FLOAT_DIV";
-const INTEGER_CONST = "INTEGER_CONST";
-const REAL_CONST = "REAL_CONST";
-const PROCEDURE = "PROCEDURE";
+import { Token } from "./token.js";
 
-export {
-  INTEGER,
-  MINUS,
-  PLUS,
-  MUL,
-  DIV,
-  EOF,
-  SPACE,
-  LPAREN,
-  RPAREN,
-  BEGIN,
-  END,
-  ID,
-  DOT,
-  ASSIGN,
-  SEMI,
-  VAR,
-  REAL,
-  PROGRAM,
-  INTEGER_DIV,
-  INTEGER_CONST,
-  REAL_CONST,
-  COLON,
-  COMMA,
-  FLOAT_DIV,
-  PROCEDURE,
+export const ReservedKeyWords = {
+  PROGRAM: "PROGRAM",
+  INTEGER: "INTEGER",
+  REAL: "REAL",
+  DIV: "INTEGER_DIV",
+  VAR: "VAR",
+  PROCEDURE: "PROCEDURE",
+  BEGIN: "BEGIN",
+  END: "END",
 };
+
+export const SingleCharType = {
+  MINUS: "MINUS",
+  PLUS: "PLUS",
+  MUL: "MUL",
+  SPACE: "SPACE",
+  LPAREN: "LPAREN",
+  RPAREN: "RPAREN",
+  DOT: "DOT",
+  SEMI: "SEMI",
+  COLON: "COLON",
+  COMMA: "COMMA",
+  FLOAT_DIV: "FLOAT_DIV",
+};
+
+export const SingleChar = {
+  [SingleCharType.MINUS]: "-",
+  [SingleCharType.PLUS]: "+",
+  [SingleCharType.MUL]: "*",
+  [SingleCharType.SPACE]: " ",
+  [SingleCharType.LPAREN]: "(",
+  [SingleCharType.RPAREN]: ")",
+  [SingleCharType.DOT]: ".",
+  [SingleCharType.SEMI]: ";",
+  [SingleCharType.COLON]: ":",
+  [SingleCharType.COMMA]: ",",
+  [SingleCharType.FLOAT_DIV]: "/",
+};
+
+export const SingleCharByValue = Object.entries(SingleChar).reduce(
+  (acc, [key, value]) => {
+    return {
+      ...acc,
+      [value]: key,
+    };
+  },
+  {}
+);
+
+export const TokenType = {
+  ID: "ID",
+  INTEGER_CONST: "INTEGER_CONST",
+  REAL_CONST: "REAL_CONST",
+  ASSIGN: "ASSIGN",
+  EOF: "EOF",
+  ...SingleCharType,
+  ...ReservedKeyWords,
+};
+
+const buildReservedKeywords = () => {
+  return Object.entries(ReservedKeyWords).reduce((acc, [key, value]) => {
+    return {
+      ...acc,
+      [key]: new Token(key, value),
+    };
+  }, {});
+};
+
+export const RESERVED_KEYWORDS = buildReservedKeywords();

@@ -1,11 +1,11 @@
-import { INTEGER, REAL } from './helpers.js';
+import { TokenType } from "./helpers.js";
+import { isScope } from './init.js';
 
 export class Symbol {
   constructor(name, type) {
     this.name = name;
     this.type = type;
   }
-
 }
 
 export class BuilinTypeSymbol extends Symbol {
@@ -36,32 +36,33 @@ export class ProcedureSymbol extends Symbol {
   }
 
   toString() {
-    return `<${this.name}: ${this.params.map(param => param.toString())}>`;
+    return `<${this.name}: ${this.params.map((param) => param.toString())}>`;
   }
 }
 
 export class ScopedSymbolTable {
   _symbols = new Map();
 
-  constructor(scopeName, scopeLevel, enclosingScope = null) {
+  constructor(scopeName, scopeLevel, enclosingScope = null, isLoging) {
     this.scopeName = scopeName;
     this.scopeLevel = scopeLevel;
     this.enclosingScope = enclosingScope;
+    this.isLoging = isLoging !== undefined ? isLoging : isScope;
   }
 
   initBuilins() {
-    this.define(new BuilinTypeSymbol(INTEGER));
-    this.define(new BuilinTypeSymbol(REAL));
+    this.define(new BuilinTypeSymbol(TokenType.INTEGER));
+    this.define(new BuilinTypeSymbol(TokenType.REAL));
   }
 
   define(symbol) {
-    // console.log(`Define: ${symbol.name}. (Scope name: ${this.scopeName})`);
+    this._log(`Define: ${symbol.name}. (Scope name: ${this.scopeName})`);
     this._symbols.set(symbol.name, symbol);
     symbol.scope = this;
   }
 
   lookup(name, currentScopeOnly) {
-    // console.log(`Lookup: ${name}. (Scope name: ${this.scopeName})`);
+    this._log(`Lookup: ${name}. (Scope name: ${this.scopeName})`);
     const symbol = this._symbols.get(name);
 
     if (symbol) {
@@ -77,13 +78,19 @@ export class ScopedSymbolTable {
     }
   }
 
+  _log(message) {
+    if (this.isLoging) {
+      console.log(message);
+    }
+  }
+
   toString() {
-//     return `--------------------------------------------------------
-// SCOPE (SCOPED SYMBOL TABLE)
-// Scope name: ${this.scopeName}
-// Scope level: ${this.scopeLevel}
-// Enclosing scope: ${this.enclosingScope?.scopeName ?? null}
-// ${[...this._symbols.entries()].map(([_, symbol]) => symbol.toString())}
-// `;
+    return `--------------------------------------------------------
+SCOPE (SCOPED SYMBOL TABLE)
+Scope name: ${this.scopeName}
+Scope level: ${this.scopeLevel}
+Enclosing scope: ${this.enclosingScope?.scopeName ?? null}
+${[...this._symbols.entries()].map(([_, symbol]) => symbol.toString())}
+`;
   }
 }

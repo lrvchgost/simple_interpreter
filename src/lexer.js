@@ -1,61 +1,20 @@
-import {
-  INTEGER,
-  MINUS,
-  PLUS,
-  MUL,
-  DIV,
-  EOF,
-  LPAREN,
-  RPAREN,
-  BEGIN,
-  END,
-  ID,
-  ASSIGN,
-  SEMI,
-  DOT,
-  VAR,
-  REAL,
-  PROGRAM,
-  INTEGER_DIV,
-  INTEGER_CONST,
-  REAL_CONST,
-  COLON,
-  COMMA,
-  FLOAT_DIV,
-  PROCEDURE,
-} from "./helpers.js";
-
-export class Token {
-  constructor(type, value) {
-    this.type = type;
-    this.value = value;
-  }
-
-  toString() {
-    return `Token(${this.type}, ${this.value})`;
-  }
-}
-
-const RESERVED_KEYWORDS = {
-  [PROGRAM]: new Token(PROGRAM, PROGRAM),
-  [VAR]: new Token(VAR, VAR),
-  [DIV]: new Token(INTEGER_DIV, DIV),
-  [INTEGER]: new Token(INTEGER, INTEGER),
-  [REAL]: new Token(REAL, REAL),
-  [BEGIN]: new Token(BEGIN, BEGIN),
-  [END]: new Token(END, END),
-  [PROCEDURE]: new Token(PROCEDURE, PROCEDURE),
-};
+import { TokenType, RESERVED_KEYWORDS, SingleCharByValue, SingleChar } from "./helpers.js";
+import { Token } from './token.js';
+import { LexerError } from "./error/errors.js";
 
 export class Lexer {
   constructor(text) {
     this.text = text;
     this.pos = 0;
     this.currentChar = text[this.pos];
+    this.lineno = 1;
+    this.column = 1;
   }
 
-  _error(source) {
-    throw new Error("Error parsing input:" + source);
+  _error() {
+    const message = `Lexer error on ${this.currentChar} line: ${this.lineno} column: ${this.column}`;
+
+    throw new LexerError(message);
   }
 
   _peek() {
@@ -89,7 +48,12 @@ export class Lexer {
       this._advance();
     }
 
-    return RESERVED_KEYWORDS[result.toUpperCase()] ?? new Token(ID, result);
+    const token = RESERVED_KEYWORDS[result.toUpperCase()] ?? new Token(TokenType.ID, result, this.lineno, this.column);
+
+    token.lineno = this.lineno;
+    token.column = this.column;
+
+    return token;
   }
 
   _isInteger() {
@@ -109,12 +73,17 @@ export class Lexer {
   }
 
   _advance() {
+    if (this.currentChar === "\n") {
+      this.lineno += 1;
+      this.column = 0;
+    }
     this.pos++;
 
     if (this.pos > this.text.length - 1) {
       this.currentChar = null;
     } else {
       this.currentChar = this.text[this.pos];
+      this.column += 1;
     }
   }
 
@@ -142,9 +111,9 @@ export class Lexer {
         this._advance();
       }
 
-      return new Token(REAL_CONST, Number(result));
+      return new Token(TokenType.REAL_CONST, Number(result));
     } else {
-      return new Token(INTEGER_CONST, Number(result));
+      return new Token(TokenType.INTEGER_CONST, Number(result));
     }
   }
 
@@ -179,62 +148,21 @@ export class Lexer {
       if (currentChar === ":" && this._peek() === "=") {
         this._advance();
         this._advance();
-        return new Token(ASSIGN, ":=");
+        return new Token(TokenType.ASSIGN, ":=");
       }
 
-      if (currentChar === ":") {
+      const type = SingleCharByValue[this.currentChar];
+      
+      if (type === undefined) {
+        this._error();
+      } else {
         this._advance();
-        return new Token(COLON, currentChar);
+        return new Token(type, SingleChar[type], this.lineno, this.column);
       }
 
-      if (currentChar === ",") {
-        this._advance();
-        return new Token(COMMA, currentChar);
-      }
-
-      if (currentChar === ";") {
-        this._advance();
-        return new Token(SEMI, currentChar);
-      }
-
-      if (currentChar === ".") {
-        this._advance();
-        return new Token(DOT, currentChar);
-      }
-
-      if (currentChar === "+") {
-        this._advance();
-        return new Token(PLUS, currentChar);
-      }
-
-      if (currentChar === "-") {
-        this._advance();
-        return new Token(MINUS, currentChar);
-      }
-
-      if (currentChar === "*") {
-        this._advance();
-        return new Token(MUL, currentChar);
-      }
-
-      if (currentChar === "/") {
-        this._advance();
-        return new Token(FLOAT_DIV, currentChar);
-      }
-
-      if (currentChar === "(") {
-        this._advance();
-        return new Token(LPAREN, currentChar);
-      }
-
-      if (currentChar === ")") {
-        this._advance();
-        return new Token(RPAREN, currentChar);
-      }
-
-      this._error("cannot recognize symbol " +  this.currentChar);
+      this._error();
     }
 
-    return new Token(EOF, null);
+    return new Token(TokenType.EOF, null, this.lineno, this.column);
   }
 }
