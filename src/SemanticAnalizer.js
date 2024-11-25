@@ -16,7 +16,6 @@ export class SemanticAnalizer {
   }
 
   visitForProgramm(node) {
-    console.log('hey')
     this._log("> ===== ENTER global scope");
     this.currentScope.define(new VarSymbol(node.name));
     const scope = new ScopedSymbolTable(
@@ -131,6 +130,19 @@ export class SemanticAnalizer {
     this._log(procedureScope.toString());
     this.currentScope = this.currentScope.enclosingScope;
     this._log(`< ===== LEAVE proc scope ${procName}`);
+  }
+
+  visitProcCall(node) {
+    const symbol = this.currentScope.lookup(node.procName);
+    const paramsLength = symbol.getParamsLength();
+
+    if (paramsLength !== node.actualParams.length) {
+      this._error(ErrorCodeEnum.WRONG_PARAMS_NUM, node.token);
+    }
+
+    for (const param of node.actualParams) {
+      param.visit(this);
+    }
   }
 
   toString() {

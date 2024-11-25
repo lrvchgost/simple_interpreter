@@ -10,7 +10,8 @@ export class Interpreter {
 
     this.staticAnalisys(ast);
 
-    return this.traslate(ast);
+    // return this.traslate(ast);
+    return ast;
   }
 
   staticAnalisys(ast) {

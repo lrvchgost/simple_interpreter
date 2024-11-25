@@ -5,6 +5,7 @@ import {
   Compaund,
   NoOp,
   NumNode,
+  ProcCall,
   ProcedureDecl,
   Programm,
   Type,
@@ -229,11 +230,39 @@ export class Parser {
 
     if (this._currentToken.type === TokenType.BEGIN) {
       node = this._compoundStatement();
+    } else if (this._currentToken.type === TokenType.ID && this.lexer.currentChar === '(') {
+      node = this._procCallStatement();
     } else if (this._currentToken.type === TokenType.ID) {
       node = this._assignmentStatment();
     } else {
       node = this._empty();
     }
+
+    return node;
+  }
+
+  _procCallStatement() {
+    const token = this._currentToken;
+
+    const procName = this._currentToken.value;
+    this._eat(TokenType.ID);
+    this._eat(TokenType.LPAREN);
+    const actualParams = [];
+
+    if (this._currentToken.type !== TokenType.RPAREN) {
+      const node = this._expr();
+      actualParams.push(node);
+    }
+
+    while (this._currentToken.type === TokenType.COMMA) {
+      this._eat(TokenType.COMMA);
+      const node = this._expr();
+      actualParams.push(node);
+    }
+
+    this._eat(TokenType.RPAREN);
+
+    const node = new ProcCall(procName, actualParams, token);
 
     return node;
   }

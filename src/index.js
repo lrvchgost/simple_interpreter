@@ -10,7 +10,7 @@ import fs from "fs";
 // import { INTEGER, MUL, PLUS } from "./helpers.js";
 import { Parser } from "./parser.js";
 
-const prog = fs.readFileSync("./source/scope02.pas", "utf-8").toString();
+const prog = fs.readFileSync("./source/procCall.pas", "utf-8").toString();
 
 console.log(prog);
 
@@ -28,7 +28,7 @@ const result = interpreter.interpret();
 
 // process.stdout.write(result + "\n");
 
-fs.writeFileSync('./test.pas', result);
+// fs.writeFileSync('./test.pas', result);
 
 // console.log("GLOBAL_SCOPE", interpreter.translator.GLOBAL_SCOPE);
 // console.log("SymbolTable", interpreter.semanticAnalizer.toString());

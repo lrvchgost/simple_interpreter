@@ -173,3 +173,15 @@ export class Param extends AST {
     visitor.visitParam(this);
   }
 }
+
+export class ProcCall extends AST {
+  constructor(procName, actualParams, token) {
+    super(token);
+    this.procName = procName;
+    this.actualParams = actualParams;
+  }
+
+  visit(visitor) {
+    visitor.visitProcCall(this);
+  }
+}

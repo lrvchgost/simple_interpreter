@@ -35,6 +35,10 @@ export class ProcedureSymbol extends Symbol {
     this.params = params ?? [];
   }
 
+  getParamsLength() {
+    return this.params.length;
+  }
+
   toString() {
     return `<${this.name}: ${this.params.map((param) => param.toString())}>`;
   }
