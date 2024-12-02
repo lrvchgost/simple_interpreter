@@ -9,8 +9,8 @@ program Main;
    end;
 
 begin { Main }
-  { Alpha(4 + 4, 7); }
+  Alpha(4 + 4, 7);
   { Alpha(4 + 4); }
   { Alpha(4); }
-  Alpha();
+  { Alpha(); }
 end.  { Main }

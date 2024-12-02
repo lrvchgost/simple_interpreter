@@ -1,29 +1,32 @@
-import { MINUS, PLUS, MUL, FLOAT_DIV, INTEGER_DIV } from "./helpers.js";
+import { TokenType } from "./helpers.js";
+import { CallStack } from './CallStack.js';
+import { ActivationRecord, ARType } from './ActivationRecord.js';
+import { isCallStack } from './init.js';
 
 export class BaseTranslator {
-  GLOBAL_SCOPE = {};
+  callStack = new CallStack();
 
   visitForBinOp(node) {
     const left = node.left.visit(this);
     const right = node.right.visit(this);
 
-    if (node.op.type === PLUS) {
+    if (node.op.type === TokenType.PLUS) {
       return left + right;
     }
 
-    if (node.op.type === MINUS) {
+    if (node.op.type === TokenType.MINUS) {
       return left - right;
     }
 
-    if (node.op.type === MUL) {
+    if (node.op.type === TokenType.MUL) {
       return left * right;
     }
 
-    if (node.op.type === INTEGER_DIV) {
+    if (node.op.type === TokenType.INTEGER_DIV) {
       return Math.trunc(left / right);
     }
 
-    if (node.op.type === FLOAT_DIV) {
+    if (node.op.type === TokenType.FLOAT_DIV) {
       return left / right;
     }
   }
@@ -33,11 +36,11 @@ export class BaseTranslator {
   }
 
   visitForUnaryOp(node) {
-    if (node.token.type === PLUS) {
+    if (node.token.type === TokenType.PLUS) {
       return +node.node.visit(this);
     }
 
-    if (node.token.type === MINUS) {
+    if (node.token.type === TokenType.MINUS) {
       return -node.node.visit(this);
     }
   }
@@ -56,12 +59,14 @@ export class BaseTranslator {
     const varName = node.left.value;
     const value = node.right.visit(this);
 
-    this.GLOBAL_SCOPE[varName] = value;
+    const ar = this.callStack.peek();
+    ar[varName] = value;
   }
 
   visitVar(node) {
     const varName = node.value;
-    const val = this.GLOBAL_SCOPE[varName];
+    const ar = this.callStack.peek();
+    const val = ar[varName];
 
     if (val === undefined) {
       throw "[ " + varName + " ]" + " not found in GLOBAL_SCOPE";
@@ -71,7 +76,21 @@ export class BaseTranslator {
   }
 
   visitForProgramm(node) {
-    return node.block.visit(this);
+    const progName = node.name;
+    this._log(`ENTER: PROGRAM ${progName}`);
+    
+
+    const ar = new ActivationRecord(progName, ARType.PROGRAM, 1);
+
+    this.callStack.push(ar);
+
+    const result = node.block.visit(this);
+
+    this._log(`LEAVE: PROGRAM ${progName}`);
+    this._log(String(this.callStack));
+    this.callStack.pop();
+
+    return result;
   }
 
   visitForBlock(node) {
@@ -92,5 +111,19 @@ export class BaseTranslator {
 
   visitProcedure(node) {
     return;
+  }
+
+  visitProcedureDecl(node) {
+    return;
+  }
+
+  visitProcCall(node) {
+    return;
+  }
+
+  _log(message) {
+    if (isCallStack) {
+      console.log(message);
+    }
   }
 }

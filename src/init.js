@@ -1,7 +1,4 @@
-const scope = process.argv[2];
+const params = process.argv.slice(2);
 
-export let isScope = false;
-
-if (scope === '--scope') {
-  isScope = true;
-}
+export let isScope = params.includes('--scope');
+export let isCallStack = params.includes('--stack');
