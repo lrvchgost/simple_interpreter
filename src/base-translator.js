@@ -1,7 +1,15 @@
 import { TokenType } from "./helpers.js";
-import { CallStack } from './CallStack.js';
-import { ActivationRecord, ARType } from './ActivationRecord.js';
-import { isCallStack } from './init.js';
+import { CallStack } from "./CallStack.js";
+import { ActivationRecord, ARType } from "./ActivationRecord.js";
+import { isCallStack } from "./init.js";
+
+function zip(arrays) {
+  return arrays[0].map(function (_, i) {
+    return arrays.map(function (array) {
+      return array[i];
+    });
+  });
+}
 
 export class BaseTranslator {
   callStack = new CallStack();
@@ -69,7 +77,7 @@ export class BaseTranslator {
     const val = ar[varName];
 
     if (val === undefined) {
-      throw "[ " + varName + " ]" + " not found in GLOBAL_SCOPE";
+      throw "[ " + varName + " ]" + " not found in " + ar.name;
     }
 
     return val;
@@ -78,7 +86,6 @@ export class BaseTranslator {
   visitForProgramm(node) {
     const progName = node.name;
     this._log(`ENTER: PROGRAM ${progName}`);
-    
 
     const ar = new ActivationRecord(progName, ARType.PROGRAM, 1);
 
@@ -118,7 +125,32 @@ export class BaseTranslator {
   }
 
   visitProcCall(node) {
-    return;
+    const procName = node.procName;
+
+    const ar = new ActivationRecord(procName, ARType.PROCEDURE, 2);
+
+    const symbol = node.procSymbol;
+    const formalParametrs = symbol.params;
+    const actualParams = node.actualParams;
+
+    for (const [paramSymbol, argumentNode] of zip([
+      formalParametrs,
+      actualParams,
+    ])) {
+      ar[paramSymbol.name] = argumentNode.visit(this);
+    }
+
+    this.callStack.push(ar);
+
+    this._log('ENTER PROCEDURE ' + procName);
+    this._log(String(this.callStack));
+
+    symbol.blockAst.visit(this);
+
+    this._log('LEAVE PROCEDURE ' + procName);
+    this._log(String(this.callStack));
+
+    this.callStack.pop();
   }
 
   _log(message) {

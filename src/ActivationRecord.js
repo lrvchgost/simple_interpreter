@@ -1,5 +1,6 @@
 export const ARType = {
   PROGRAM: "PROGRAM",
+  PROCEDURE: "PROCEDURE",
 };
 
 export class ActivationRecord {
@@ -14,13 +15,14 @@ export class ActivationRecord {
         target.members.set(prop, val);
 
         return true;
-
       },
       get(...rest) {
-        const [ target, prop ] = rest;
+        const [target, prop] = rest;
         const value = Reflect.get(...rest);
-        return typeof value == 'function' ? value.bind(target) : target.members.get(prop);
-      }
+        return typeof value == "function"
+          ? value.bind(target)
+          : target.members.get(prop);
+      },
     });
   }
 
@@ -38,4 +40,3 @@ export class ActivationRecord {
     return lines.join("\n");
   }
 }
-

@@ -5,7 +5,7 @@ program Main;
    procedure Alpha(a : integer; b : integer);
       var y : integer;
    begin
-     x := x + y + a + b;
+      x := x + y + a + b;
    end;
 
 begin { Main }

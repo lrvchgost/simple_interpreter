@@ -179,6 +179,7 @@ export class ProcCall extends AST {
     super(token);
     this.procName = procName;
     this.actualParams = actualParams;
+    this.procSymbol = null;
   }
 
   visit(visitor) {

@@ -8,14 +8,13 @@ export class Interpreter {
   interpret() {
     const ast = this.parser.parse();
 
-    // this.staticAnalisys(ast);
+    this.staticAnalisys(ast);
 
     return this.traslate(ast);
     // return ast;
   }
 
   staticAnalisys(ast) {
-    debugger;
     ast.visit(this.semanticAnalizer);
   }
 

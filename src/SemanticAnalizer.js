@@ -6,13 +6,12 @@ import { isScope } from './init.js';
 export class SemanticAnalizer {
   currentScope = null;
 
-  constructor(isLoging) {
+  constructor() {
     this._log("> ===== Create builtin scope ");
     const scope = new ScopedSymbolTable("builtin", 0, this.currentScope);
     scope.initBuilins();
 
     this.currentScope = scope;
-    this.isLoging = isLoging;
   }
 
   visitForProgramm(node) {
@@ -105,9 +104,9 @@ export class SemanticAnalizer {
     const procSymbol = new ProcedureSymbol(procName);
     this.currentScope.define(procSymbol);
 
-    if (this.isLoging) {
-      this._log("> ==== ENTER proc scope ", procName);
-    }
+    procSymbol.blockAst = node.procBlock;
+
+    this._log("> ==== ENTER proc scope ", procName);
 
     const procedureScope = new ScopedSymbolTable(
       procName,
@@ -143,6 +142,8 @@ export class SemanticAnalizer {
     for (const param of node.actualParams) {
       param.visit(this);
     }
+
+    node.procSymbol = symbol;
   }
 
   toString() {

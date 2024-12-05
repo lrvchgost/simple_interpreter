@@ -33,6 +33,7 @@ export class ProcedureSymbol extends Symbol {
     super(name);
 
     this.params = params ?? [];
+    this.blockAst = null;
   }
 
   getParamsLength() {
