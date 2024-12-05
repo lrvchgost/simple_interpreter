@@ -5,6 +5,7 @@ export class Symbol {
   constructor(name, type) {
     this.name = name;
     this.type = type;
+    this.scopeLevel = 0;
   }
 }
 
@@ -64,6 +65,7 @@ export class ScopedSymbolTable {
     this._log(`Define: ${symbol.name}. (Scope name: ${this.scopeName})`);
     this._symbols.set(symbol.name, symbol);
     symbol.scope = this;
+    symbol.scopeLevel = this.scopeLevel;
   }
 
   lookup(name, currentScopeOnly) {

@@ -8,7 +8,7 @@ import { SemanticAnalizer } from "./SemanticAnalizer.js";
 import fs from "fs";
 import { Parser } from "./parser.js";
 
-const prog = fs.readFileSync("./source/procCall18.pas", "utf-8").toString();
+const prog = fs.readFileSync("./source/part19.pas", "utf-8").toString();
 
 console.log(prog);
 

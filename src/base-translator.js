@@ -126,10 +126,10 @@ export class BaseTranslator {
 
   visitProcCall(node) {
     const procName = node.procName;
-
-    const ar = new ActivationRecord(procName, ARType.PROCEDURE, 2);
-
     const symbol = node.procSymbol;
+
+    const ar = new ActivationRecord(procName, ARType.PROCEDURE, symbol.scopeLevel + 1);
+
     const formalParametrs = symbol.params;
     const actualParams = node.actualParams;
 
